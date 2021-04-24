@@ -57,7 +57,7 @@ def get_my_trades():
     print(f'nb_trades={nb_trades}')
 
 
-def import_trades_from_csv_file(filename: str) -> list[Trade]:
+def get_trades_from_csv_file(filename: str) -> list[Trade]:
     """ Import trades from csv file with ';' delimiter
 
         :param filename: filename of the csv file with path (ie /home/patrick/Documents/Finances/Binance-export-trades.csv)
@@ -80,8 +80,15 @@ def import_trades_from_csv_file(filename: str) -> list[Trade]:
 def main():
     # res = get_my_trades()
     # pprint('get_my_trades()', res)
-    trades = import_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
+    trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
+    trade_repo = TradeRepo()
     # pprint(type(trades[0].pair))
+    # for trade in trades:
+    #     trade_repo.save(trade)
+    t1 = datetime.now()
+    trade_repo.save_all(trades)
+    t2 = datetime.now()
+    print(t2-t1)
 
 if __name__ == '__main__':
     main()
