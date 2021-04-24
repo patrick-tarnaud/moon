@@ -12,9 +12,10 @@ class TradeOrigin(Enum):
 
 
 class Trade:
-    def __init__(self, id: str, pair: str, type: TradeType, qty: float, price: float, total: float, date: datetime,
-                 fee: float,
-                 fee_asset: str, origin_id: str, origin: TradeOrigin):
+    def __init__(self, id: str, pair: str, type: TradeType = None, qty: float = None, price: float = None,
+                 total: float = None, date: datetime = None,
+                 fee: float = None,
+                 fee_asset: str = None, origin_id: str = None, origin: TradeOrigin = None):
         self.id = id
         self.pair = pair
         self.type = type
@@ -28,6 +29,4 @@ class Trade:
         self.origin = origin
 
     def __repr__(self):
-        return f'id: {self.id}, pair: {self.pair}, type: {self.type}, qty: {self.qty}, price: {self.price}, total: {self.total}, date: {self.date}, fee: {self.fee}, fee_asset: {self.fee_asset}, origin_id: {self.origin_id}, origin: {self.origin}'
-
-
+        return f'Trade(id={self.id}, pair={self.pair}, type={self.type}, qty={self.qty}, price={self.price}, total={self.total}, date={self.date}, fee={self.fee}, fee_asset={self.fee_asset}, origin_id={self.origin_id}, origin={self.origin})'

@@ -85,10 +85,11 @@ def main():
     # pprint(type(trades[0].pair))
     # for trade in trades:
     #     trade_repo.save(trade)
-    t1 = datetime.now()
-    trade_repo.save_all(trades)
-    t2 = datetime.now()
-    print(t2-t1)
-
+    # t1 = datetime.now()
+    # trade_repo.save_all(trades)
+    # t2 = datetime.now()
+    # print(t2-t1)
+    trade = trade_repo.read(2)
+    print(trade)
 if __name__ == '__main__':
     main()
