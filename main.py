@@ -4,6 +4,7 @@ from datetime import datetime
 from model.trade import Trade, TradeOrigin, TradeType
 import csv
 import os
+from db.trade_repo import TradeRepo
 
 # api_key and api_secret for Binance API in env
 client = Client(os.environ['api_key'], os.environ['api_secret'])
@@ -72,6 +73,7 @@ def import_trades_from_csv_file(filename: str) -> list[Trade]:
                           float(row[BINANCE_CSV_INDEX_QTY]), float(row[BINANCE_CSV_INDEX_PRICE]), float(row[BINANCE_CSV_INDEX_TOTAl]),
                           datetime.strptime(row[BINANCE_CSV_INDEX_DATE], '%Y-%m-%d %H:%M:%S'),
                           float(row[BINANCE_CSV_INDEX_FEE]), row[BINANCE_CSV_INDEX_FEE_ASSET], None, TradeOrigin.BINANCE))
+
     return trades
 
 
@@ -79,7 +81,7 @@ def main():
     # res = get_my_trades()
     # pprint('get_my_trades()', res)
     trades = import_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
-    pprint(trades)
+    # pprint(type(trades[0].pair))
 
 if __name__ == '__main__':
     main()

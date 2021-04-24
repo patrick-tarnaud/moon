@@ -3,8 +3,8 @@ from enum import Enum
 
 
 class TradeType(Enum):
+    BUY = 'BUY'
     SELL = 'SELL'
-    BUY = 'BUY',
 
 
 class TradeOrigin(Enum):
@@ -14,7 +14,7 @@ class TradeOrigin(Enum):
 class Trade:
     def __init__(self, id: str, pair: str, type: TradeType, qty: float, price: float, total: float, date: datetime,
                  fee: float,
-                 feeAsset: str, tradeOriginId: str, tradeOrigin: TradeOrigin):
+                 fee_asset: str, origin_id: str, origin: TradeOrigin):
         self.id = id
         self.pair = pair
         self.type = type
@@ -23,9 +23,11 @@ class Trade:
         self.total = total
         self.date = date
         self.fee = fee
-        self.feeAsset = feeAsset
-        self.tradeOriginId = tradeOriginId
-        self.tradeOrigin = tradeOrigin
+        self.fee_asset = fee_asset
+        self.origin_id = origin_id
+        self.origin = origin
 
     def __repr__(self):
-        return f'id: {self.id}, pair: {self.pair}, type: {self.type}, qty: {self.qty}, price: {self.price}, total: {self.total}, date: {self.date}, fee: {self.fee}, feeAsset: {self.feeAsset}, tradeOriginId: {self.tradeOriginId}, tradeOrigin: {self.tradeOrigin}'
+        return f'id: {self.id}, pair: {self.pair}, type: {self.type}, qty: {self.qty}, price: {self.price}, total: {self.total}, date: {self.date}, fee: {self.fee}, fee_asset: {self.fee_asset}, origin_id: {self.origin_id}, origin: {self.origin}'
+
+
