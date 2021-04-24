@@ -5,6 +5,8 @@ from model.trade import Trade, TradeOrigin, TradeType
 import csv
 import os
 from db.trade_repo import TradeRepo
+from exceptions.exceptions import EntityNotFoundError
+import traceback
 
 # api_key and api_secret for Binance API in env
 client = Client(os.environ['api_key'], os.environ['api_secret'])
@@ -85,11 +87,18 @@ def main():
     # pprint(type(trades[0].pair))
     # for trade in trades:
     #     trade_repo.save(trade)
-    # t1 = datetime.now()
-    # trade_repo.save_all(trades)
-    # t2 = datetime.now()
-    # print(t2-t1)
-    trade = trade_repo.read(2)
-    print(trade)
+    try:
+        t1 = datetime.now()
+        trade_repo.save_all(trades)
+        t2 = datetime.now()
+        print(t2 - t1)
+        trade = trade_repo.read(1212)
+        print(trade)
+    except EntityNotFoundError as e:
+        print(e)
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
+
 if __name__ == '__main__':
     main()

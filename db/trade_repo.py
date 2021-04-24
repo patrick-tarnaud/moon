@@ -1,9 +1,14 @@
 import sqlite3
-from model.trade import Trade, TradeType, TradeOrigin
+import os
 
-TO_THE_MOON_DB = 'to_the_moon.db'
+from exceptions.exceptions import EntityNotFoundError
+from model.trade import Trade, TradeType, TradeOrigin
+from exceptions.exceptions import EntityNotFoundError
+
+TO_THE_MOON_DB = os.environ['db']
 
 SQL_INSERT_TRADE = "insert into trade(id, pair, type, qty, price, total, date, fee, fee_asset, origin_id, origin) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
+SQL_UPDATE_TRADE = "update trade set pair = ?, type  = ?, qty = ?, price = ?, total = ?, date = ?, fee = ?, fee_asset = ?, origin_id = ?, origin = ? where id = ?"
 SQL_SELECT_READ_TRADE = "select * from trade where id=?"
 
 SQL_SELECT_INDEX_ID = 0
@@ -32,8 +37,15 @@ class TradeRepo:
         pass
 
     def read(self, id: int) -> Trade:
+        """
+        Returns the trade identified by the id parameter
+
+        :param id: trade id
+        """
         self.cur.execute(SQL_SELECT_READ_TRADE, (id,))
         row = self.cur.fetchone()
+        if row is None:
+            raise EntityNotFoundError(f"Le trade {id} n'existe pas")
         return Trade(row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
                      TradeType.BUY if row[SQL_SELECT_INDEX_TYPE] == 'BUY' else TradeType.SELL,
                      row[SQL_SELECT_INDEX_QTY], row[SQL_SELECT_INDEX_PRICE], row[SQL_SELECT_INDEX_TOTAL],
@@ -41,9 +53,14 @@ class TradeRepo:
                      row[SQL_SELECT_INDEX_ORIGIN], row[SQL_SELECT_INDEX_ORIGIN_ID])
 
     def save(self, trade: Trade):
-        self.cur.execute(SQL_INSERT_TRADE, [trade.id, trade.pair, trade.type.value, trade.qty,
-                                            trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
-                                            trade.origin_id, trade.origin.value])
+        if trade.id is None:
+            self.cur.execute(SQL_INSERT_TRADE, [trade.id, trade.pair, trade.type.value, trade.qty,
+                                                trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
+                                                trade.origin_id, trade.origin.value])
+        else:
+            self.cur.execute(SQL_UPDATE_TRADE, [trade.pair, trade.type.value, trade.qty,
+                                                trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
+                                                trade.origin_id, trade.origin.value, trade.id])
         self.conn.commit()
 
     def save_all(self, trades: list[Trade]):
