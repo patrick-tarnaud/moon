@@ -17,6 +17,8 @@ SQL_INSERT_TRADE = "insert into trade(pair, type, qty, price, total, date, fee, 
 SQL_UPDATE_TRADE = "update trade set pair = ?, type  = ?, qty = ?, price = ?, total = ?, date = ?, fee = ?, fee_asset = ?, origin_id = ?, origin = ? where id = ?"
 SQL_SELECT_READ_TRADE = "select * from trade where id=?"
 SQL_SELECT_FIND_TRADE = "select * from trade"
+SQL_DELETE_TRADE = "delete from trade where id=?"
+
 
 SQL_SELECT_INDEX_ID = 0
 SQL_SELECT_INDEX_PAIR = 1
@@ -102,6 +104,11 @@ class TradeDB:
                                             trade.origin_id,
                                             trade.origin.value), trades))
         self.cur.executemany(SQL_INSERT_TRADE, newTrades)
+        self.conn.commit()
+
+    def delete(self, id):
+        self.read(id)
+        self.cur.execute(SQL_DELETE_TRADE, (id,))
         self.conn.commit()
 
     def __del__(self):

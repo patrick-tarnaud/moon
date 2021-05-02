@@ -57,7 +57,7 @@ def test_read_trade(tradedb):
     print('\n', trade)
 
 
-def test_read_non_existant_trade(tradedb):
+def test_read_non_existing_trade(tradedb):
     with pytest.raises(EntityNotFoundError):
         tradedb.read(999)
 
@@ -93,8 +93,17 @@ def test_save_all(tradedb):
     assert new_len == original_len + 2
 
 
-def test_find(tradedb):
+def test_find_trades(tradedb):
     trades = tradedb.find()
     assert len(trades) == 6
     print('\n')
     pprint(trades)
+
+def test_delete_existing_trade(tradedb):
+    assert len(tradedb.find()) == 6
+    tradedb.delete(1)
+    assert len(tradedb.find()) == 5
+
+def test_delete_non_existing_trade(tradedb):
+    with pytest.raises(EntityNotFoundError):
+        tradedb.delete(999)
