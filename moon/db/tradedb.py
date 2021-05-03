@@ -19,7 +19,6 @@ SQL_SELECT_READ_TRADE = "select * from trade where id=?"
 SQL_SELECT_FIND_TRADE = "select * from trade"
 SQL_DELETE_TRADE = "delete from trade where id=?"
 
-
 SQL_SELECT_INDEX_ID = 0
 SQL_SELECT_INDEX_PAIR = 1
 SQL_SELECT_INDEX_TYPE = 2
@@ -45,18 +44,39 @@ class TradeDB:
             self.conn = conn
         self.cur = self.conn.cursor()
 
-    def find(self) -> list[Trade]:
-        self.cur.execute(SQL_SELECT_FIND_TRADE)
+    def find(self, pair: str = None, trade_type: TradeType = None, begin_date: datetime = None,
+             end_date: datetime = None, origin: str = None) -> list[Trade]:
+        req = SQL_SELECT_FIND_TRADE
+        parameters = []
+        if pair or trade_type or begin_date or end_date or origin: req += ' where '
+        if pair:
+            req += ' pair = ? '
+            parameters.append(pair)
+        if trade_type:
+            req += ' and type = ? ' if parameters else ' type = ? '
+            parameters.append(trade_type.value)
+        if begin_date:
+            req += ' and date >= ? ' if parameters else ' date >= ? '
+            parameters.append(begin_date)
+        if end_date:
+            req += ' and date <= ? ' if parameters else ' date <= ? '
+            parameters.append(end_date)
+        if origin:
+            req += ' and origin = ? ' if parameters else ' origin = ? '
+            parameters.append(origin.value)
+        self.cur.execute(req, parameters)
         rows = self.cur.fetchall()
         trades = []
         for row in rows:
             trades.append(Trade(row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
-                  TradeType.BUY if row[SQL_SELECT_INDEX_TYPE] == 'BUY' else TradeType.SELL,
-                  row[SQL_SELECT_INDEX_QTY], row[SQL_SELECT_INDEX_PRICE], row[SQL_SELECT_INDEX_TOTAL],
-                  datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S.%f'), row[SQL_SELECT_INDEX_FEE],
-                  row[SQL_SELECT_INDEX_FEE_ASSET],
-                  row[SQL_SELECT_INDEX_ORIGIN_ID],
-                  TradeOrigin.BINANCE if row[SQL_SELECT_INDEX_ORIGIN] == 'BINANCE' else TradeOrigin.OTHER))
+                                TradeType.BUY if row[SQL_SELECT_INDEX_TYPE] == 'BUY' else TradeType.SELL,
+                                row[SQL_SELECT_INDEX_QTY], row[SQL_SELECT_INDEX_PRICE], row[SQL_SELECT_INDEX_TOTAL],
+                                datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S'),
+                                row[SQL_SELECT_INDEX_FEE],
+                                row[SQL_SELECT_INDEX_FEE_ASSET],
+                                row[SQL_SELECT_INDEX_ORIGIN_ID],
+                                TradeOrigin.BINANCE if row[
+                                                           SQL_SELECT_INDEX_ORIGIN] == 'BINANCE' else TradeOrigin.OTHER))
         return trades
 
     def read(self, id: int) -> Trade:
@@ -74,7 +94,7 @@ class TradeDB:
         return Trade(row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
                      TradeType.BUY if row[SQL_SELECT_INDEX_TYPE] == 'BUY' else TradeType.SELL,
                      row[SQL_SELECT_INDEX_QTY], row[SQL_SELECT_INDEX_PRICE], row[SQL_SELECT_INDEX_TOTAL],
-                     datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S.%f'), row[SQL_SELECT_INDEX_FEE],
+                     datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S'), row[SQL_SELECT_INDEX_FEE],
                      row[SQL_SELECT_INDEX_FEE_ASSET],
                      row[SQL_SELECT_INDEX_ORIGIN_ID],
                      TradeOrigin.BINANCE if row[SQL_SELECT_INDEX_ORIGIN] == 'BINANCE' else TradeOrigin.OTHER)
