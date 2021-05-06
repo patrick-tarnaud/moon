@@ -99,3 +99,11 @@ def test_not_equals(trade):
     other = Trade(1, 'BTCEUR', TradeType.BUY, 1000.0, 2.0, 200.0, datetime.fromisoformat('2021-01-01 14:00:00'), 0.5,
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other != trade
+
+def test_pair_to_asset():
+    assets = Trade.pair_to_asset(['BTCEUR', 'ETHEUR', 'CAKEUSDT', 'HOTBNB'])
+    assert type(assets) is set
+    assert 'BTC' in assets
+    assert 'ETH' in assets
+    assert 'CAKE' in assets
+    assert 'HOT' in assets

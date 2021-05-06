@@ -11,6 +11,7 @@ class TradeOrigin(Enum):
     BINANCE = 'BINANCE'
     OTHER = 'OTHER'
 
+BUY_ASSETS = ('EUR', 'USDT', 'BNB')
 
 class Trade:
     def __init__(self, id: int = None, pair: str = None, type: TradeType = None, qty: float = None, price: float = None,
@@ -28,6 +29,14 @@ class Trade:
         self.fee_asset = fee_asset
         self.origin_id = origin_id
         self.origin = origin
+
+    def __repr__(self):
+        return f'Trade(id={self.id}, pair={self.pair}, type={self.type}, qty={self.qty}, price={self.price}, total={self.total}, date={self.date}, fee={self.fee}, fee_asset={self.fee_asset}, origin_id={self.origin_id}, origin={self.origin})'
+
+    def __eq__(self, other):
+        if not isinstance(other, Trade): return False
+        return self.id == other.id and self.pair == other.pair and self.qty == other.qty and self.price == other.price and self.total == other.total and self.fee == other.fee and self.fee_asset == other.fee_asset and self.origin_id == other.origin_id and self.origin == other.origin
+
 
     @property
     def id(self) -> int:
@@ -119,9 +128,17 @@ class Trade:
     def origin(self, val: TradeOrigin):
         self._origin = TradeOrigin(val)
 
-    def __repr__(self):
-        return f'Trade(id={self.id}, pair={self.pair}, type={self.type}, qty={self.qty}, price={self.price}, total={self.total}, date={self.date}, fee={self.fee}, fee_asset={self.fee_asset}, origin_id={self.origin_id}, origin={self.origin})'
 
-    def __eq__(self, other):
-        if not isinstance(other, Trade): return False
-        return self.id == other.id and self.pair == other.pair and self.qty == other.qty and self.price == other.price and self.total == other.total and self.fee == other.fee and self.fee_asset == other.fee_asset and self.origin_id == other.origin_id and self.origin == other.origin
+    @staticmethod
+    def pair_to_asset(pairs: list[str]) -> set[str]:
+        res = set()
+        for pair in pairs:
+            for ba in BUY_ASSETS:
+                if pair.endswith(ba):
+                    res.add(pair.removesuffix(ba))
+                    break
+        return res
+
+    @staticmethod
+    def get_wallet():
+        pass
