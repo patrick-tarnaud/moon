@@ -13,3 +13,8 @@ CREATE TABLE trade(
 );
 
 CREATE INDEX trade_id_index ON trade (id ASC);
+
+# sqlite3
+# .open moon.dd
+# .read ./src/conf/db.sql
+# .tables
