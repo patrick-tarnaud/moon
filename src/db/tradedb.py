@@ -1,10 +1,10 @@
-import sqlite3
-import os
-from datetime import datetime
 import copy
+import os
+import sqlite3
+from datetime import datetime
 
-from model.trade import Trade, TradeType, TradeOrigin
 from exceptions.exceptions import EntityNotFoundError
+from model.trade import Trade, TradeType, TradeOrigin
 
 # get the DB from environment variable 'db'
 # if db var env doesn't exist then pass, a connection will be provided on the dunder init

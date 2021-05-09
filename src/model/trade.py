@@ -11,7 +11,9 @@ class TradeOrigin(Enum):
     BINANCE = 'BINANCE'
     OTHER = 'OTHER'
 
+
 BUY_ASSETS = ('EUR', 'USDT', 'BNB')
+
 
 class Trade:
     def __init__(self, id: int = None, pair: str = None, type: TradeType = None, qty: float = None, price: float = None,
@@ -36,7 +38,6 @@ class Trade:
     def __eq__(self, other):
         if not isinstance(other, Trade): return False
         return self.id == other.id and self.pair == other.pair and self.qty == other.qty and self.price == other.price and self.total == other.total and self.fee == other.fee and self.fee_asset == other.fee_asset and self.origin_id == other.origin_id and self.origin == other.origin
-
 
     @property
     def id(self) -> int:
@@ -127,7 +128,6 @@ class Trade:
     @origin.setter
     def origin(self, val: TradeOrigin):
         self._origin = TradeOrigin(val)
-
 
     @staticmethod
     def pair_to_asset(pairs: list[str]) -> set[str]:

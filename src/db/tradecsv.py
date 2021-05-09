@@ -1,5 +1,6 @@
 import csv
 from datetime import datetime
+
 from model.trade import Trade, TradeOrigin, TradeType
 
 # indexes in CSV file from Binance
@@ -11,6 +12,7 @@ BINANCE_CSV_INDEX_QTY = 4
 BINANCE_CSV_INDEX_TOTAl = 5
 BINANCE_CSV_INDEX_FEE = 6
 BINANCE_CSV_INDEX_FEE_ASSET = 7
+
 
 def get_trades_from_csv_file(filename: str) -> list[Trade]:
     """ Import trades from csv file with ';' delimiter

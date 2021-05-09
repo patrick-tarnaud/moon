@@ -1,11 +1,9 @@
-from datetime import datetime
-import os
 from pprint import pprint
 
-# from binance.client import Client
-
 from db.tradecsv import get_trades_from_csv_file
-from model.trade import Trade, TradeOrigin, TradeType
+from model.trade import Trade, TradeType
+
+# from binance.client import Client
 
 # api_key and api_secret for Binance API in env
 # client = Client(os.environ['api_key'], os.environ['api_secret'])
@@ -48,8 +46,6 @@ pairs = {'ADAEUR', 'BNBEUR', 'BTCEUR', 'BTTEUR', 'CAKEUSDT', 'CHZEUR', 'DOGEEUR'
 #     print(f'nb_trades={nb_trades}')
 
 
-
-
 def main():
     trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
     # pprint(trades)
@@ -58,9 +54,12 @@ def main():
 
     assets = Trade.pair_to_asset([trade.pair for trade in trades])
     pprint(assets)
-    print('BTC', sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'BTCEUR']))
-    print('ETH', sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'ETHEUR']))
-    print('BNB', sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'BNBEUR' or trade.pair == 'BNBUSDT']))
+    print('BTC',
+          sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'BTCEUR']))
+    print('ETH',
+          sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'ETHEUR']))
+    print('BNB', sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if
+                      trade.pair == 'BNBEUR' or trade.pair == 'BNBUSDT']))
 
 
 if __name__ == '__main__':

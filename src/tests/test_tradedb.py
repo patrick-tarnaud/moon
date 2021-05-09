@@ -1,11 +1,12 @@
 import datetime
-from pprint import pprint
-import pytest
 import sqlite3
+from pprint import pprint
+
+import pytest
 
 from db.tradedb import TradeDB, SQL_INSERT_TRADE
-from model.trade import Trade, TradeType, TradeOrigin
 from exceptions.exceptions import EntityNotFoundError
+from model.trade import Trade, TradeType, TradeOrigin
 
 NB_TRADES = 6
 NB_BUY_TRADES = 4

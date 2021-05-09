@@ -1,6 +1,8 @@
-import pytest
-from model.trade import Trade, TradeType, TradeOrigin
 from datetime import datetime
+
+import pytest
+
+from model.trade import Trade, TradeType, TradeOrigin
 
 
 @pytest.fixture
@@ -95,10 +97,12 @@ def test_equals(trade):
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other == trade
 
+
 def test_not_equals(trade):
     other = Trade(1, 'BTCEUR', TradeType.BUY, 1000.0, 2.0, 200.0, datetime.fromisoformat('2021-01-01 14:00:00'), 0.5,
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other != trade
+
 
 def test_pair_to_asset():
     assets = Trade.pair_to_asset(['BTCEUR', 'ETHEUR', 'CAKEUSDT', 'HOTBNB'])
