@@ -1,6 +1,7 @@
 import csv
 from datetime import datetime
 
+from db.tradedb import TradeDB
 from model.trade import Trade, TradeOrigin, TradeType
 
 # indexes in CSV file from Binance
@@ -14,7 +15,7 @@ BINANCE_CSV_INDEX_FEE = 6
 BINANCE_CSV_INDEX_FEE_ASSET = 7
 
 
-def get_trades_from_csv_file(filename: str) -> list[Trade]:
+def _get_trades_from_csv_file(filename: str) -> list[Trade]:
     """ Import trades from csv file with ';' delimiter
 
         :param filename: filename of the csv file with path (ie /home/patrick/Documents/Finances/binance-export-trades.csv)
@@ -34,3 +35,10 @@ def get_trades_from_csv_file(filename: str) -> list[Trade]:
                                 TradeOrigin.BINANCE))
 
     return trades
+
+
+def import_from_csv_file(filename: str):
+    trades_to_import = _get_trades_from_csv_file(filename)
+    trade_db = TradeDB.get_trade_db()
+    new_trades = trade_db.filter_new_trades(trades_to_import)
+    trade_db.save_all(new_trades)

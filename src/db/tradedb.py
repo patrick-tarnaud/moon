@@ -36,6 +36,13 @@ class TradeDB:
     """
     Use for database acess
     """
+    trade_db = None
+
+    @staticmethod
+    def get_trade_db():
+        if TradeDB.trade_db is None:
+            TradeDB.trade_db = TradeDB()
+        return TradeDB.trade_db
 
     def __init__(self, conn=None):
         if conn is None:
