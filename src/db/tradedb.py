@@ -131,6 +131,22 @@ class TradeDB:
         self.cur.execute(SQL_DELETE_TRADE, (id,))
         self.conn.commit()
 
+    def filter_new_trades(self, trades: list[Trade]) -> list[Trade]:
+        """
+        Returns the trades that don't already exist in the database among those passed in parameters
+        @:param trades: the trades to filter
+        @:return: the trades passed in parameter minus the trades already existing in database
+        """
+
+        # get the interval of time for loading trades from db
+        # search in db all trades in the interval
+        begin_date = min(trades, key=lambda t: t.date).date
+        end_date = max(trades, key=lambda t: t.date).date
+        trades_in_db = self.find(begin_date=begin_date, end_date=end_date)
+
+        # return difference between trades set and db set
+        return list(set(trades) - (set(trades_in_db)))
+
     def __del__(self):
         self.cur.close()
         self.conn.close()

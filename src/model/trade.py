@@ -16,7 +16,8 @@ BUY_ASSETS = ('EUR', 'USDT', 'BNB')
 
 
 class Trade:
-    def __init__(self, id: int = None, pair: str = None, type: TradeType = None, qty: float = None, price: float = None,
+    def __init__(self, id: int = None, pair: str = None, type: TradeType = TradeType.BUY, qty: float = None,
+                 price: float = None,
                  total: float = None, date: datetime = None,
                  fee: float = None,
                  fee_asset: str = None, origin_id: str = None, origin: TradeOrigin = None):
@@ -37,7 +38,11 @@ class Trade:
 
     def __eq__(self, other):
         if not isinstance(other, Trade): return False
-        return self.id == other.id and self.pair == other.pair and self.qty == other.qty and self.price == other.price and self.total == other.total and self.fee == other.fee and self.fee_asset == other.fee_asset and self.origin_id == other.origin_id and self.origin == other.origin
+        return self.pair == other.pair and self.type == other.type and self.qty == other.qty and self.price == other.price and self.total == other.total and self.fee == other.fee and self.fee_asset == other.fee_asset and self.origin_id == other.origin_id and self.origin == other.origin
+
+    def __hash__(self):
+        return hash(
+            (self.pair, self.qty, self.price, self.total, self.fee, self.fee_asset, self.origin_id, self.origin))
 
     @property
     def id(self) -> int:
