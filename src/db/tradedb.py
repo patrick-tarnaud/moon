@@ -164,15 +164,16 @@ class TradeDB:
         # return difference between trades set and db set
         return list(set(trades) - (set(trades_in_db)))
 
-    def import_new_trades(self, trades: list[Trade]):
+    def import_new_trades(self, trades: list[Trade]) -> list[Trade]:
         """
         Import trades passed in parameter in database
         The trades already existing are ignored
         :param trades: the trades to import
-        :return:
+        :return: the saved trades
         """
         new_trades = self._filter_new_trades(trades)
         self.save_all(new_trades)
+        return new_trades
 
     def __del__(self):
         self.cur.close()

@@ -47,7 +47,7 @@ pairs = {'ADAEUR', 'BNBEUR', 'BTCEUR', 'BTTEUR', 'CAKEUSDT', 'CHZEUR', 'DOGEEUR'
 
 def main():
     app = QApplication(sys.argv)
-    main_window = MainWindow()
+    main_window = MainWindow(app)
     sys.exit(app.exec_())
 
 # trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
