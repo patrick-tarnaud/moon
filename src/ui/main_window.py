@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QCloseEvent
+from PySide6.QtGui import QAction, QCloseEvent, QIcon
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QApplication, QMessageBox
 
 import db.tradecsv as tradecsv
@@ -12,6 +12,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app = app
         self.init_ui()
+        self.setWindowIcon(QIcon('./images/moon.png'))
 
     def init_ui(self):
         """
