@@ -1,9 +1,8 @@
-from pprint import pprint
-
-from db.tradecsv import get_trades_from_csv_file
-from model.trade import Trade, TradeType
-
 # from binance.client import Client
+import sys
+from PySide6.QtWidgets import QApplication
+
+from ui.main_window import MainWindow
 
 # api_key and api_secret for Binance API in env
 # client = Client(os.environ['api_key'], os.environ['api_secret'])
@@ -47,19 +46,14 @@ pairs = {'ADAEUR', 'BNBEUR', 'BTCEUR', 'BTTEUR', 'CAKEUSDT', 'CHZEUR', 'DOGEEUR'
 
 
 def main():
-    trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
-    # pprint(trades)
-    # print(len(trades))
-    # pprint([trade for trade in trades if trade.pair == 'BTCEUR'])
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    sys.exit(app.exec_())
 
-    assets = Trade.pair_to_asset([trade.pair for trade in trades])
-    pprint(assets)
-    print('BTC',
-          sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'BTCEUR']))
-    print('ETH',
-          sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if trade.pair == 'ETHEUR']))
-    print('BNB', sum([trade.qty if trade.type == TradeType.BUY else -trade.qty for trade in trades if
-                      trade.pair == 'BNBEUR' or trade.pair == 'BNBUSDT']))
+# trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
+# pprint(trades)
+# print(len(trades))
+# pprint([trade for trade in trades if trade.pair == 'BTCEUR'])
 
 
 if __name__ == '__main__':

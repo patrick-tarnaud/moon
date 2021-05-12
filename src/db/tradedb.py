@@ -53,6 +53,16 @@ class TradeDB:
 
     def find(self, pair: str = None, trade_type: TradeType = None, begin_date: datetime = None,
              end_date: datetime = None, origin: str = None) -> list[Trade]:
+        """
+        Find trades by criterias, if no parameters supplied then all trades are returns
+
+        :param pair: pair to search
+        :param trade_type: trade type
+        :param begin_date: begin date
+        :param end_date: end date
+        :param origin: origin of the trade
+        :return: list of trades
+        """
         req = SQL_SELECT_FIND_TRADE
         parameters = []
         if pair or trade_type or begin_date or end_date or origin: req += ' where '
@@ -138,7 +148,7 @@ class TradeDB:
         self.cur.execute(SQL_DELETE_TRADE, (id,))
         self.conn.commit()
 
-    def filter_new_trades(self, trades: list[Trade]) -> list[Trade]:
+    def _filter_new_trades(self, trades: list[Trade]) -> list[Trade]:
         """
         Returns the trades that don't already exist in the database among those passed in parameters
         @:param trades: the trades to filter
@@ -153,6 +163,16 @@ class TradeDB:
 
         # return difference between trades set and db set
         return list(set(trades) - (set(trades_in_db)))
+
+    def import_new_trades(self, trades: list[Trade]):
+        """
+        Import trades passed in parameter in database
+        The trades already existing are ignored
+        :param trades: the trades to import
+        :return:
+        """
+        new_trades = self._filter_new_trades(trades)
+        self.save_all(new_trades)
 
     def __del__(self):
         self.cur.close()
