@@ -136,11 +136,12 @@ class TradeDB:
         return new_trade
 
     def save_all(self, trades: list[Trade]) -> None:
-        newTrades = list(map(lambda trade: (trade.pair, trade.type.value, trade.qty,
+        # transform original list to get the values of the enums (type and origin)
+        new_trades = list(map(lambda trade: (trade.pair, trade.type.value, trade.qty,
                                             trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
-                                            trade.origin_id,
+                                            trade.origin_id if trade.origin_id is not None else '',
                                             trade.origin.value), trades))
-        self.cur.executemany(SQL_INSERT_TRADE, newTrades)
+        self.cur.executemany(SQL_INSERT_TRADE, new_trades)
         self.conn.commit()
 
     def delete(self, id):

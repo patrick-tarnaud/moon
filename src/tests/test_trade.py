@@ -7,8 +7,7 @@ from model.trade import Trade, TradeType, TradeOrigin
 
 @pytest.fixture
 def trade():
-    return Trade(1, 'BTCEUR', TradeType.BUY, 100.0, 2.0, 200.0, datetime.fromisoformat('2021-01-01 14:00:00'), 0.5,
-                 'EUR', '1', TradeOrigin.BINANCE)
+    return Trade(1, 'BTCEUR', TradeType.BUY, 100.0, 2.0, 200.0, datetime.fromisoformat('2021-01-01 14:00:00'), 0.5,'EUR', '1', TradeOrigin.BINANCE)
 
 
 def test_constructor_value(trade):

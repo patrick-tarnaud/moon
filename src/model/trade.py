@@ -14,6 +14,9 @@ class TradeOrigin(Enum):
 
 BUY_ASSETS = ('EUR', 'USDT', 'BNB')
 
+TRADE_ATTRIBUTES_LABELS = ['Id', 'Pair', 'Type', 'Quantité', 'Prix', 'Total', 'Date' ,'Taxe', 'Taxe devise', 'Id origine',
+                           'Origine']
+
 
 class Trade:
     def __init__(self, id: int = None, pair: str = None, type: TradeType = TradeType.BUY, qty: float = None,
@@ -59,7 +62,7 @@ class Trade:
 
     @pair.setter
     def pair(self, val: str):
-        self._pair = str(val)
+        self._pair = str(val) if val is not None else None
 
     @property
     def type(self) -> TradeType:
@@ -116,7 +119,7 @@ class Trade:
 
     @fee_asset.setter
     def fee_asset(self, val: str):
-        self._fee_asset = str(val)
+        self._fee_asset = str(val) if val is not None else None
 
     @property
     def origin_id(self) -> float:
@@ -124,7 +127,7 @@ class Trade:
 
     @origin_id.setter
     def origin_id(self, val: str):
-        self._origin_id = str(val)
+        self._origin_id = str(val) if val is not None else None
 
     @property
     def origin(self) -> TradeOrigin:
@@ -144,6 +147,3 @@ class Trade:
                     break
         return res
 
-    @staticmethod
-    def get_wallet():
-        pass

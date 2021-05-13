@@ -4,13 +4,13 @@ from PySide6.QtWidgets import QMainWindow, QFileDialog, QApplication, QMessageBo
 
 import db.tradecsv as tradecsv
 from db.tradedb import TradeDB
+from ui.trades_window import TradesWindow
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, app: QApplication):
+    def __init__(self):
         super().__init__()
-        self.app = app
         self.init_ui()
         self.setWindowIcon(QIcon('./images/moon.png'))
 
@@ -21,8 +21,10 @@ class MainWindow(QMainWindow):
         self.setGeometry(300, 300, 800, 600)
         self.setWindowTitle('Moon !')
         self.statusBar().showMessage('Prêt')
-
         self.init_menu_bar()
+
+        self.trades_window = TradesWindow(self)
+        self.setCentralWidget(self.trades_window)
 
         self.show()
 
@@ -52,10 +54,11 @@ class MainWindow(QMainWindow):
         dialog.setFileMode(QFileDialog.ExistingFile)
         if dialog.exec_():
             filename = dialog.selectedFiles()
-            self.app.setOverrideCursor(Qt.WaitCursor)
+            QApplication.instance().setOverrideCursor(Qt.WaitCursor)
             trades = tradecsv.get_trades_from_csv_file(filename[0])
             saved_trades = TradeDB.get_trade_db().import_new_trades(trades)
-            self.app.restoreOverrideCursor()
+            QApplication.instance().restoreOverrideCursor()
             QMessageBox.information(self, 'Import',
-                                    'Import réussi.\n Le nombre de trades lus est %i. \n Le nombre de trades sauvegardés est %i.' % (
-                                    len(trades), len(saved_trades)))
+                                    'Importation réussie.\n Le nombre de trades lus est %i. \n Le nombre de trades sauvegardés est %i.' % (
+                                        len(trades), len(saved_trades)))
+            self.trades_window.show_trades()
