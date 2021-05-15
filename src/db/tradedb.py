@@ -81,6 +81,7 @@ class TradeDB:
         if origin:
             req += ' and origin = ? ' if parameters else ' origin = ? '
             parameters.append(origin.value)
+        req += ' order by date'
         self.cur.execute(req, parameters)
         rows = self.cur.fetchall()
         trades = []

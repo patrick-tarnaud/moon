@@ -14,8 +14,7 @@ class TradeOrigin(Enum):
 
 BUY_ASSETS = ('EUR', 'USDT', 'BNB')
 
-TRADE_ATTRIBUTES_LABELS = ['Id', 'Pair', 'Type', 'Quantité', 'Prix', 'Total', 'Date' ,'Taxe', 'Taxe devise', 'Id origine',
-                           'Origine']
+
 
 
 class Trade:
