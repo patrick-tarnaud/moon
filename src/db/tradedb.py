@@ -19,6 +19,8 @@ SQL_SELECT_READ_TRADE = "select * from trade where id=?"
 SQL_SELECT_FIND_TRADE = "select * from trade"
 SQL_DELETE_TRADE = "delete from trade where id=?"
 
+SQL_SELECT_PAIRS = 'select distinct pair from trade order by pair'
+
 SQL_SELECT_INDEX_ID = 0
 SQL_SELECT_INDEX_PAIR = 1
 SQL_SELECT_INDEX_TYPE = 2
@@ -139,9 +141,9 @@ class TradeDB:
     def save_all(self, trades: list[Trade]) -> None:
         # transform original list to get the values of the enums (type and origin)
         new_trades = list(map(lambda trade: (trade.pair, trade.type.value, trade.qty,
-                                            trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
-                                            trade.origin_id if trade.origin_id is not None else '',
-                                            trade.origin.value), trades))
+                                             trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
+                                             trade.origin_id if trade.origin_id is not None else '',
+                                             trade.origin.value), trades))
         self.cur.executemany(SQL_INSERT_TRADE, new_trades)
         self.conn.commit()
 
@@ -176,6 +178,17 @@ class TradeDB:
         new_trades = self._filter_new_trades(trades)
         self.save_all(new_trades)
         return new_trades
+
+    def get_pairs(self) -> list[str]:
+        """
+        Get pairs (ex BTCEUR) existing in db
+        :return: pairs
+        """
+        self.cur.execute(SQL_SELECT_PAIRS)
+        pairs = self.cur.fetchall()
+        # transform list of tuples in list of str value
+        pairs = [pair[0] for pair in pairs]
+        return pairs
 
     def __del__(self):
         self.cur.close()

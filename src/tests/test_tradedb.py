@@ -173,21 +173,6 @@ def test_delete_non_existing_trade(tradedb):
 
 
 def test_filter_new_trades_all_new(tradedb):
-    # Trades in DB
-    # trades = [
-    #     ('BTCEUR', 'BUY', 100, 2.5, 250, datetime.datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE'),
-    #     ('BTCEUR', 'BUY', 200, 3, 600, datetime.datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE'),
-    #     ('BTCEUR', 'SELL', 50, 4, 200, datetime.datetime.strptime('2021-05-05 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE'),
-    #     ('ETHEUR', 'BUY', 300, 1, 300, datetime.datetime.strptime('2021-05-06 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE'),
-    #     ('ETHEUR', 'BUY', 150, 1.5, 225, datetime.datetime.strptime('2021-05-07 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE'),
-    #     ('ETHEUR', 'SELL', 100, 2, 200, datetime.datetime.strptime('2021-05-08 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10,
-    #      'EUR', '', 'BINANCE')
-    # ]
     trade1 = Trade(None, 'BTCEUR', TradeType.BUY, 1000, 2, 2000,
                    datetime.datetime.strptime('2021-05-03 10:00:00', '%Y-%m-%d %H:%M:%S'), 0.20, 'EUR', None,
                    TradeOrigin.BINANCE)
@@ -196,8 +181,6 @@ def test_filter_new_trades_all_new(tradedb):
                    TradeOrigin.BINANCE)
     new_trades = tradedb._filter_new_trades([trade1, trade2])
     assert len(new_trades) == 2
-    print()
-    pprint(new_trades)
 
 def test_filter_new_trades_all_existing(tradedb):
     trade1 = Trade(None, 'BTCEUR', TradeType.BUY, 200, 3, 600,
@@ -208,5 +191,7 @@ def test_filter_new_trades_all_existing(tradedb):
                    TradeOrigin.BINANCE)
     new_trades = tradedb._filter_new_trades([trade1, trade2])
     assert len(new_trades) == 0
-    print()
-    pprint(new_trades)
+
+def test_get_pairs(tradedb):
+    pairs = tradedb.get_pairs()
+    assert len(pairs) == 2

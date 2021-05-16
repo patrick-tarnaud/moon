@@ -34,7 +34,11 @@ class TradesWindow(QWidget):
     def init_ui(self):
         # search criteria
         self.pair_label = QLabel('Pair :')
-        self.pair = QLineEdit()
+        self.pair = QComboBox()
+        self.pair.setEditable(True)
+        self.pair.addItem('')
+        for pair in TradeDB.get_trade_db().get_pairs():
+            self.pair.addItem(pair)
 
         self.type_label = QLabel('Type :')
         self.type = QComboBox()
@@ -48,11 +52,12 @@ class TradesWindow(QWidget):
         self.end_date_label = QLabel('Date de fin')
         self.end_date = QDateEdit(datetime.date.today())
 
-        self.search_button = QPushButton('Chercher')
+        self.search_button = QPushButton('&Chercher')
+        self.search_button.setDefault(True)
         self.search_button.clicked.connect(self.search_trades)
 
         # trade tables
-        self.trades_table = QTableWidget(10, 8, self)
+        self.trades_table = QTableWidget()
         self.trades_table.setColumnCount(len(TRADE_COL_LABELS))
         self.trades_table.setHorizontalHeaderLabels(TRADE_COL_LABELS)
         self.trades_table.setColumnHidden(0, True)
@@ -90,7 +95,7 @@ class TradesWindow(QWidget):
 
     def search_trades(self) -> None:
         trade_db = TradeDB.get_trade_db()
-        trades = trade_db.find(self.pair.text(), self.type.itemData(self.type.currentIndex()),
+        trades = trade_db.find(self.pair.currentText(), self.type.itemData(self.type.currentIndex()),
                                utils.convert_date_to_datetime(self.begin_date.date().toPython(), "00:00:00"),
                                utils.convert_date_to_datetime(self.end_date.date().toPython(), "23:59:59"))
         self.trades_table.clearContents()
