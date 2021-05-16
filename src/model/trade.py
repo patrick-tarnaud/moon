@@ -15,8 +15,6 @@ class TradeOrigin(Enum):
 BUY_ASSETS = ('EUR', 'USDT', 'BNB')
 
 
-
-
 class Trade:
     def __init__(self, id: int = None, pair: str = None, type: TradeType = TradeType.BUY, qty: float = None,
                  price: float = None,
@@ -145,4 +143,3 @@ class Trade:
                     res.add(pair.removesuffix(ba))
                     break
         return res
-

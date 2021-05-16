@@ -194,7 +194,7 @@ def test_filter_new_trades_all_new(tradedb):
     trade2 = Trade(None, 'BTCEUR', TradeType.BUY, 100, 2, 2000,
                    datetime.datetime.strptime('2021-05-05 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.20, 'EUR', None,
                    TradeOrigin.BINANCE)
-    new_trades = tradedb.filter_new_trades([trade1, trade2])
+    new_trades = tradedb._filter_new_trades([trade1, trade2])
     assert len(new_trades) == 2
     print()
     pprint(new_trades)
@@ -206,7 +206,7 @@ def test_filter_new_trades_all_existing(tradedb):
     trade2 = Trade(None, 'ETHEUR', TradeType.BUY, 300, 1, 300,
                    datetime.datetime.strptime('2021-05-06 14:00:00', '%Y-%m-%d %H:%M:%S'), 0.10, 'EUR', None,
                    TradeOrigin.BINANCE)
-    new_trades = tradedb.filter_new_trades([trade1, trade2])
+    new_trades = tradedb._filter_new_trades([trade1, trade2])
     assert len(new_trades) == 0
     print()
     pprint(new_trades)
