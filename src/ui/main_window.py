@@ -2,9 +2,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QCloseEvent, QIcon
 from PySide6.QtWidgets import QMainWindow, QFileDialog, QApplication, QMessageBox
 
-import db.tradecsv as tradecsv
-from db.tradedb import TradeDB
-from ui.trades_window import TradesWindow
+from model.trade import Trade
+from model.wallet import Wallet
+from ui.trade_window import TradesWindow
 
 
 class MainWindow(QMainWindow):
@@ -49,16 +49,21 @@ class MainWindow(QMainWindow):
         """
         CSV File import
         """
+        # import trades from csv file
+        # get the new trades from db (suppress doublon)
+        # show the trades
+        # calculate qty and PRU for wallet
         dialog = QFileDialog(self)
         dialog.setNameFilter("Fichiers CSV (*.csv)")
         dialog.setFileMode(QFileDialog.ExistingFile)
         if dialog.exec_():
             filename = dialog.selectedFiles()
             QApplication.instance().setOverrideCursor(Qt.WaitCursor)
-            trades = tradecsv.get_trades_from_csv_file(filename[0])
-            saved_trades = TradeDB.get_trade_db().import_new_trades(trades)
+            new_trades = Trade.import_trades_from_csv_file(filename)
             QApplication.instance().restoreOverrideCursor()
             QMessageBox.information(self, 'Import',
-                                    'Importation réussie.\n Le nombre de trades lus est %i. \n Le nombre de trades sauvegardés est %i.' % (
-                                        len(trades), len(saved_trades)))
-            self.trades_window.show_trades()
+                                    'Importation réussie.\n Le nombre de trades importés est %i.' % (
+                                        len(new_trades)))
+            if new_trades:
+                wallet = Wallet.import_trades(new_trades)
+                self.trades_window.show_trades()
