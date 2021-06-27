@@ -45,29 +45,16 @@ def trades():
     ]
 
 
-def test_wallet_creation_ok():
-    wallet = Wallet(1, 'myWallet', datetime.strptime('2021-05-12 14:00:00', '%Y-%m-%d %H:%M:%S'))
-    assert wallet.id == 1
-    assert wallet.name == 'myWallet'
-    assert wallet.date == datetime.strptime('2021-05-12 14:00:00', '%Y-%m-%d %H:%M:%S')
-    assert len(wallet.assets) == 0
-
-
-# def test_import_trades(trades):
-#     asset_wallet = Wallet.import_trades(trades)
-# print()
-# pprint(asset_wallet)
-
-
 def test_import_trades_from_csv_file():
     # asset_wallet = Wallet.import_trades_from_csv_file('/home/patrick/Dev/moon/src/tests/data/trades.csv')
     # asset_wallet = Wallet.import_trades_from_csv_file('/home/patrick/Dev/moon/src/tests/data/trades.csv')
-    asset_wallet = Wallet.import_trades_from_csv_file(
+    wallet = Wallet(1, 'binance')
+    asset_wallet = wallet.import_trades_from_csv_file(
         '/home/patrick/Documents/Finances/Binance-export-trades.csv')
 
-    print()
+    # print()
     # pprint(asset_wallet)
-    pprint({k: v for k, v in asset_wallet.items() if v.qty != 0.0})
+    # pprint({k: v for k, v in asset_wallet.items() if v.qty != 0.0})
     # for asset, asset_data in sorted(asset_wallet.items()):
     #     if asset_data.qty != 0:
     #         print(asset_data.qty)

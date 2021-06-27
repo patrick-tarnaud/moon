@@ -1,23 +1,33 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import *
+from pprint import pprint
 
 from model.trade import Trade, TradeType
 
-WalletData = namedtuple('WalletData', 'qty_buy total_buy qty_sell total_sell qty pru pnl total_pnl',
+WalletData = namedtuple('WalletData', 'qty pru currency',
                         defaults=(
-                            Decimal('0.0'), Decimal('0.0'), Decimal('0.0'), Decimal('0.0'), Decimal('0.0'),
-                            Decimal('0.0'),
-                            Decimal('0.0'), Decimal('0.0')))
+                            Decimal('0.0'), Decimal('0.0'), None))
+
+PnlData = namedtuple('PnlData', 'date asset value currency')
+
+
+@dataclass
+class PnlTotal:
+    asset: str
+    value: Decimal
+    currency: str
 
 
 class Wallet:
-    def __init__(self, id: int = None, name: str = 'Wallet ' + str(datetime.now()),
-                 date: datetime = datetime.now()):
+    def __init__(self, id: int, name: str):
         self.id = id
         self.name = name
-        self.date = date
-        self.assets = {}
+        self.trades: list[Trade] = []
+        self.assets: dict[str, WalletData] = {}
+        self.pnl: list[PnlData] = []
+        self.cumulative_pnl: list[PnlTotal] = []
 
     @property
     def id(self) -> int:
@@ -37,99 +47,67 @@ class Wallet:
     def name(self, val: str):
         self._name = val
 
-    @property
-    def date(self) -> datetime:
-        return self._date
-
-    @date.setter
-    def date(self, val: datetime):
-        if type(val) is not None and type(val) is not datetime:
-            raise ValueError("La doit être une date valide.")
-        self._date = val
-
-    @staticmethod
-    def import_trades(trades: list[Trade]):
+    def import_trades(self, trades: list[Trade]):
         asset_wallet = {}
+        pnl_data_list = []
+        pnl_total_list = []
 
         if len(trades) > 0:
-            wallet = Wallet.get_new_wallet()
             for trade in trades:
-                # print()
-                # print(trade)
-                buy_asset, sell_asset = trade.get_assets()
+                asset1, asset2 = trade.get_assets()
                 fee_asset = trade.fee_asset
-                if buy_asset not in asset_wallet:
-                    asset_wallet[buy_asset] = WalletData()
-                if sell_asset not in asset_wallet:
-                    asset_wallet[sell_asset] = WalletData()
+
+                # init structures
+                if asset1 not in asset_wallet:
+                    asset_wallet[asset1] = WalletData()
+                if asset2 not in asset_wallet:
+                    asset_wallet[asset2] = WalletData()
                 if fee_asset not in asset_wallet:
                     asset_wallet[fee_asset] = WalletData()
+
+                # BUY
                 if trade.type == TradeType.BUY:
-                    qty_buy = Decimal(asset_wallet[buy_asset].qty_buy + trade.qty)
-                    total_buy = Decimal(asset_wallet[buy_asset].total_buy + trade.total)
-                    qty = Decimal(asset_wallet[buy_asset].qty + trade.qty)
-                    pru = Decimal(((asset_wallet[buy_asset].qty * asset_wallet[
-                        buy_asset].pru) + trade.total) / qty if qty != 0.0 else 0.0)
-                    asset_wallet[buy_asset] = WalletData(qty_buy,
-                                                         total_buy,
-                                                         asset_wallet[buy_asset].qty_sell,
-                                                         asset_wallet[buy_asset].total_sell,
-                                                         qty,
-                                                         pru,
-                                                         0,
-                                                         asset_wallet[buy_asset].total_pnl)
-                    asset_wallet[sell_asset] = WalletData(asset_wallet[sell_asset].qty_buy,
-                                                          asset_wallet[sell_asset].total_buy,
-                                                          asset_wallet[sell_asset].qty_sell,
-                                                          asset_wallet[sell_asset].total_sell,
-                                                          asset_wallet[sell_asset].qty - trade.total,
-                                                          asset_wallet[sell_asset].pru,
-                                                          asset_wallet[sell_asset].pnl,
-                                                          asset_wallet[sell_asset].total_pnl)
-
+                    qty = asset_wallet[asset1].qty + trade.qty
+                    pru = ((asset_wallet[asset1].qty * asset_wallet[
+                        asset1].pru) + trade.total) / qty if qty != 0.0 else 0.0
+                    asset_wallet[asset1] = WalletData(qty,
+                                                      pru,
+                                                      asset2)
+                    asset_wallet[asset2] = WalletData(asset_wallet[asset2].qty - trade.total,
+                                                      asset_wallet[asset2].pru,
+                                                      asset_wallet[asset2].currency)
+                # SELL
                 elif trade.type == TradeType.SELL:
-                    qty_sell = asset_wallet[buy_asset].qty_sell + trade.qty
-                    total_sell = asset_wallet[buy_asset].total_sell + trade.total
-                    qty = Decimal(asset_wallet[buy_asset].qty - trade.qty)
-                    pnl = trade.total - (trade.qty * asset_wallet[buy_asset].pru)
-                    total_pnl = asset_wallet[buy_asset].total_pnl + pnl
-                    asset_wallet[buy_asset] = WalletData(asset_wallet[buy_asset].qty_buy,
-                                                         asset_wallet[buy_asset].total_buy,
-                                                         qty_sell,
-                                                         total_sell,
-                                                         qty,
-                                                         asset_wallet[buy_asset].pru if qty != 0 else 0,
-                                                         pnl,
-                                                         total_pnl)
-                    asset_wallet[sell_asset] = WalletData(asset_wallet[sell_asset].qty_buy,
-                                                          asset_wallet[sell_asset].total_buy,
-                                                          asset_wallet[sell_asset].qty_sell,
-                                                          asset_wallet[sell_asset].total_sell,
-                                                          asset_wallet[sell_asset].qty + trade.total,
-                                                          asset_wallet[sell_asset].pru,
-                                                          asset_wallet[sell_asset].pnl,
-                                                          asset_wallet[sell_asset].total_pnl)
+                    qty = asset_wallet[asset1].qty - trade.qty
+                    pnl = trade.total - (trade.qty * asset_wallet[asset1].pru)
+                    pnl_data_list.append(PnlData(trade.date, asset1, pnl, asset2))
+                    pnl_total = [e for e in pnl_total_list if e.asset == asset1 and e.currency == asset2]
+                    if pnl_total:
+                        pnl_total[0].value += pnl
+                    else:
+                        pnl_total_list.append(PnlTotal(asset1, pnl, asset2))
+                    asset_wallet[asset1] = WalletData(qty,
+                                                      asset_wallet[asset1].pru if qty != 0 else 0,
+                                                      asset2)
+                    asset_wallet[asset2] = WalletData(asset_wallet[asset2].qty + trade.total,
+                                                      asset_wallet[asset2].pru,
+                                                      asset_wallet[asset2].currency)
                 # fees
-                asset_wallet[fee_asset] = WalletData(asset_wallet[fee_asset].qty_buy,
-                                                     asset_wallet[fee_asset].total_buy,
-                                                     asset_wallet[fee_asset].qty_sell,
-                                                     asset_wallet[fee_asset].total_sell,
-                                                     asset_wallet[fee_asset].qty - trade.fee,
+                asset_wallet[fee_asset] = WalletData(asset_wallet[fee_asset].qty - trade.fee,
                                                      asset_wallet[fee_asset].pru,
-                                                     asset_wallet[fee_asset].pnl,
-                                                     asset_wallet[fee_asset].total_pnl)
+                                                     asset_wallet[fee_asset].currency)
 
-                # print(buy_asset, asset_wallet[buy_asset].qty)
-                # print(sell_asset, asset_wallet[sell_asset])
-                # print(fee_asset, asset_wallet[fee_asset])
+                # logging.debug(asset1, asset_wallet[asset1].qty)
+                # logging.debug(asset2, asset_wallet[asset2])
+                # logging.debug(fee_asset, asset_wallet[fee_asset])
+
+        print()
+        pprint(asset_wallet)
+        pprint(pnl_data_list)
+        pprint(pnl_total_list)
 
         return asset_wallet
 
-    @staticmethod
-    def import_trades_from_csv_file(filename: str):
+    def import_trades_from_csv_file(self, filename: str):
         trades = Trade.get_trades_from_csv_file(filename)
-        return Wallet.import_trades(trades)
-
-    @staticmethod
-    def get_new_wallet():
-        return Wallet()
+        return self.import_trades(trades)
