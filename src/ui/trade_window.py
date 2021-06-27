@@ -7,7 +7,6 @@ from PySide6.QtWidgets import QWidget, QTableWidget, QVBoxLayout, QTableWidgetIt
 from babel.numbers import format_decimal
 
 import utils.utils as utils
-from db.tradedb import TradeDB
 from model.trade import Trade, TradeType
 
 TRADE_COL_LABELS = ['Id', 'Pair', 'Type', 'Quantité', 'Prix', 'Total', 'Date', 'Taxe', 'Taxe devise', 'Id origine',

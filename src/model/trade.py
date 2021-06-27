@@ -2,10 +2,11 @@ import csv
 import os
 import sqlite3
 from datetime import datetime
+from decimal import *
 from enum import Enum
 from typing import Union
 
-from exceptions.exceptions import EntityNotFoundError
+from exceptions.exceptions import EntityNotFoundError, AssetNotFoundError
 
 
 # enums
@@ -20,8 +21,10 @@ class TradeOrigin(Enum):
 
 
 # db requests
-SQL_INSERT_TRADE = "insert into trade(pair, type, qty, price, total, date, fee, fee_asset, origin_id, origin) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);"
-SQL_UPDATE_TRADE = "update trade set pair = ?, type  = ?, qty = ?, price = ?, total = ?, date = ?, fee = ?, fee_asset = ?, origin_id = ?, origin = ? where id = ?"
+SQL_INSERT_TRADE = "insert into trade(pair, type, qty, price, total, date, fee, fee_asset, origin_id, origin) values " \
+                   "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?); "
+SQL_UPDATE_TRADE = "update trade set pair = ?, type  = ?, qty = ?, price = ?, total = ?, date = ?, fee = ?, fee_asset " \
+                   "= ?, origin_id = ?, origin = ? where id = ? "
 SQL_SELECT_READ_TRADE = "select * from trade where id=?"
 SQL_SELECT_FIND_TRADE = "select * from trade"
 SQL_DELETE_TRADE = "delete from trade where id=?"
@@ -53,7 +56,7 @@ BINANCE_CSV_INDEX_FEE_ASSET = 7
 # CURRENCY_LIST = ('EUR', 'USDT')
 ASSET_LIST = (
     'BTC', 'ETH', 'BNB', 'HOT', 'SXP', 'DOT', 'ADA', 'CHZ', 'SOL', 'FIL', 'EGLD', 'CAKE', 'EOS', 'PERL', 'UNI', 'XLM',
-    'MANA', 'XRP', 'AVAX', 'HNT', 'DOGE', 'BTT', 'INJ', 'KAVA', 'EUR', 'USDT')
+    'MANA', 'XRP', 'AVAX', 'HNT', 'DOGE', 'BTT', 'INJ', 'KAVA', 'LTC', 'LINK', 'EUR', 'USDT')
 
 
 class Trade:
@@ -61,10 +64,11 @@ class Trade:
     conn = sqlite3.connect(os.environ['db'])
     cur = conn.cursor()
 
-    def __init__(self, id: int = None, pair: str = None, type: Union[TradeType, str] = TradeType.BUY, qty: float = 0.0,
-                 price: float = 0.0,
-                 total: float = 0.0, date: Union[datetime, str] = None,
-                 fee: float = 0.0,
+    def __init__(self, id: int = None, pair: str = None, type: Union[TradeType, str] = TradeType.BUY,
+                 qty: Decimal = Decimal('0.0'),
+                 price: Decimal = Decimal('0.0'),
+                 total: Decimal = Decimal('0.0'), date: Union[datetime, str] = None,
+                 fee: Decimal = Decimal('0.0'),
                  fee_asset: str = None, origin_id: str = None, origin: TradeOrigin = None):
         self.id = id
         self.pair = pair
@@ -122,28 +126,37 @@ class Trade:
         self._type = TradeType(val) if val is not None else None
 
     @property
-    def qty(self) -> float:
+    def qty(self) -> Decimal:
         return self._qty
 
     @qty.setter
-    def qty(self, val: float):
-        self._qty = float(val)
+    def qty(self, val: Decimal):
+        if not isinstance(val, Decimal):
+            self._qty = Decimal(val)
+        else:
+            self._qty = val
 
     @property
-    def price(self) -> float:
+    def price(self) -> Decimal:
         return self._price
 
     @price.setter
-    def price(self, val: float):
-        self._price = float(val)
+    def price(self, val: Decimal):
+        if not isinstance(val, Decimal):
+            self._price = Decimal(val)
+        else:
+            self._price = val
 
     @property
-    def total(self) -> float:
+    def total(self) -> Decimal:
         return self._total
 
     @total.setter
-    def total(self, val: float):
-        self._total = float(val)
+    def total(self, val: Decimal):
+        if not isinstance(val, Decimal):
+            self._total = Decimal(val)
+        else:
+            self._total = val
 
     @property
     def date(self) -> datetime:
@@ -159,12 +172,15 @@ class Trade:
             self._date = None
 
     @property
-    def fee(self) -> float:
+    def fee(self) -> Decimal:
         return self._fee
 
     @fee.setter
-    def fee(self, val: float):
-        self._fee = float(val)
+    def fee(self, val: Decimal):
+        if not isinstance(val, Decimal):
+            self._fee = Decimal(val)
+        else:
+            self._fee = val
 
     @property
     def fee_asset(self) -> str:
@@ -203,7 +219,7 @@ class Trade:
         return buy_asset, sell_asset
 
     @staticmethod
-    def _filter_new_trades(trades: list['Trade']) -> list['Trade']:
+    def filter_new_trades(trades: list['Trade']) -> list['Trade']:
         """
         Returns the trades that don't already exist in the database among those passed in parameters
         @:param trades: the trades to filter
@@ -220,21 +236,21 @@ class Trade:
         return list(set(trades) - (set(trades_in_db)))
 
     @staticmethod
-    def _import_new_trades(trades: list['Trade']) -> list['Trade']:
+    def import_trades(trades: list['Trade']) -> list['Trade']:
         """
         Import trades passed in parameter in database
         The trades already existing are ignored
         :param trades: the trades to import
         :return: the saved trades
         """
-        new_trades = Trade._filter_new_trades(trades)
+        new_trades = Trade.filter_new_trades(trades)
         Trade.save_all(new_trades)
         return new_trades
 
     @staticmethod
     def import_trades_from_csv_file(csv_file: str) -> list['Trade']:
-        trades = Trade._get_trades_from_csv_file(csv_file)
-        new_trades = Trade._import_new_trades(trades)
+        trades = Trade.get_trades_from_csv_file(csv_file)
+        new_trades = Trade.import_trades(trades)
         return new_trades
 
     @staticmethod
@@ -252,7 +268,8 @@ class Trade:
         """
         req = SQL_SELECT_FIND_TRADE
         parameters = []
-        if pair or trade_type or begin_date or end_date or origin: req += ' where '
+        if pair or trade_type or begin_date or end_date or origin:
+            req += ' where '
         if pair:
             if '*' in pair:
                 pair = pair.replace('*', '%')
@@ -281,16 +298,7 @@ class Trade:
     def read(id: int) -> 'Trade':
         """
         Returns the trade identified by the id parameter
-row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
-                                TradeType.BUY if row[SQL_SELECT_INDEX_TYPE] == 'BUY' else TradeType.SELL,
-                                row[SQL_SELECT_INDEX_QTY], row[SQL_SELECT_INDEX_PRICE], row[SQL_SELECT_INDEX_TOTAL],
-                                datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S'),
-                                row[SQL_SELECT_INDEX_FEE],
-                                row[SQL_SELECT_INDEX_FEE_ASSET],
-                                row[SQL_SELECT_INDEX_ORIGIN_ID],
-                                TradeOrigin.BINANCE if row[
-                                                           SQL_SELECT_INDEX_ORIGIN] == 'BINANCE' else TradeOrigin.OTHER)
-        :param id: trade id
+         :param id: trade id
         :return: the found trade
         :raises EntityNotFoundError: if no trade found
         """
@@ -306,21 +314,24 @@ row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
         :return: the saved trade with its id
         """
         if self.id is None:
-            cur = Trade.cur.execute(SQL_INSERT_TRADE, [self.pair, self.type.value, self.qty,
-                                                       self.price, self.total, self.date, self.fee, self.fee_asset,
+            cur = Trade.cur.execute(SQL_INSERT_TRADE, [self.pair, self.type.value, float(self.qty),
+                                                       float(self.price), float(self.total), self.date, float(self.fee),
+                                                       self.fee_asset,
                                                        self.origin_id, self.origin.value])
             self.id = cur.lastrowid
         else:
-            Trade.cur.execute(SQL_UPDATE_TRADE, [self.pair, self.type.value, self.qty,
-                                                 self.price, self.total, self.date, self.fee, self.fee_asset,
+            Trade.cur.execute(SQL_UPDATE_TRADE, [self.pair, self.type.value, float(self.qty),
+                                                 float(self.price), float(self.total), self.date, float(self.fee),
+                                                 self.fee_asset,
                                                  self.origin_id, self.origin.value, self.id])
         Trade.conn.commit()
 
     @staticmethod
     def save_all(trades: list['Trade']) -> None:
         # transform original list to get the values of the enums (type and origin)
-        new_trades = list(map(lambda trade: (trade.pair, trade.type.value, trade.qty,
-                                             trade.price, trade.total, trade.date, trade.fee, trade.fee_asset,
+        new_trades = list(map(lambda trade: (trade.pair, trade.type.value, float(trade.qty),
+                                             float(trade.price), float(trade.total), trade.date, float(trade.fee),
+                                             trade.fee_asset,
                                              trade.origin_id if trade.origin_id is not None else '',
                                              trade.origin.value), trades))
         Trade.cur.executemany(SQL_INSERT_TRADE, new_trades)
@@ -344,7 +355,7 @@ row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
         return pairs
 
     @staticmethod
-    def _get_trades_from_csv_file(filename: str) -> list['Trade']:
+    def get_trades_from_csv_file(filename: str) -> list['Trade']:
         """ Import trades from csv file with ';' delimiter
 
             :param filename: filename of the csv file with path (ie /home/patrick/Documents/Finances/binance-export-trades.csv)
@@ -357,11 +368,11 @@ row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
             for row in csv_reader:
                 trades.append(Trade(None, row[BINANCE_CSV_INDEX_PAIR],
                                     row[BINANCE_CSV_INDEX_TRADE_TYPE],
-                                    float(row[BINANCE_CSV_INDEX_QTY]),
-                                    float(row[BINANCE_CSV_INDEX_PRICE]),
-                                    float(row[BINANCE_CSV_INDEX_TOTAl]),
+                                    Decimal(row[BINANCE_CSV_INDEX_QTY]),
+                                    Decimal(row[BINANCE_CSV_INDEX_PRICE]),
+                                    Decimal(row[BINANCE_CSV_INDEX_TOTAl]),
                                     row[BINANCE_CSV_INDEX_DATE],
-                                    float(row[BINANCE_CSV_INDEX_FEE]),
+                                    Decimal(row[BINANCE_CSV_INDEX_FEE]),
                                     row[BINANCE_CSV_INDEX_FEE_ASSET],
                                     None,
                                     TradeOrigin.BINANCE))
@@ -372,3 +383,22 @@ row[SQL_SELECT_INDEX_ID], row[SQL_SELECT_INDEX_PAIR],
     def close_db():
         Trade.cur.close()
         Trade.conn.close()
+
+    @staticmethod
+    def get_trades_by_asset(trades: list['Trade']) -> dict[str, list['Trade']]:
+        asset_dict = {}
+        for trade in trades:
+            buy_asset, sell_asset = trade.get_assets()
+            if buy_asset is None:
+                raise AssetNotFoundError('Buy asset unknown in trades : ' + str(trade))
+            if sell_asset is None:
+                raise AssetNotFoundError('Sell asset unknown in trades : ' + str(trade))
+            if buy_asset not in asset_dict:
+                asset_dict[buy_asset] = [trade]
+            else:
+                asset_dict[buy_asset].append(trade)
+            if sell_asset not in asset_dict:
+                asset_dict[sell_asset] = [trade]
+            else:
+                asset_dict[sell_asset].append(trade)
+        return asset_dict
