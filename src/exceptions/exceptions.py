@@ -6,3 +6,7 @@ class EntityNotFoundError(Exception):
 class AssetNotFoundError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
+
+class EntityValidateError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
