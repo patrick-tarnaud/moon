@@ -34,6 +34,19 @@ SQL_DELETE_TRADE = "delete from trade where id=?"
 
 SQL_SELECT_PAIRS = 'select distinct pair from trade order by pair'
 
+SQL_SELECT_INDEX_ID = 0
+SQL_SELECT_INDEX_ID_WALLET = 1
+SQL_SELECT_INDEX_PAIR = 2
+SQL_SELECT_INDEX_TYPE = 3
+SQL_SELECT_INDEX_QTY = 4
+SQL_SELECT_INDEX_PRICE = 5
+SQL_SELECT_INDEX_TOTAL = 6
+SQL_SELECT_INDEX_DATE = 7
+SQL_SELECT_INDEX_FEE = 8
+SQL_SELECT_INDEX_FEE_ASSET = 9
+SQL_SELECT_INDEX_ORIGIN_ID = 10
+SQL_SELECT_INDEX_ORIGIN = 11
+
 # indexes in CSV file from Binance for import
 BINANCE_CSV_INDEX_DATE = 0
 BINANCE_CSV_INDEX_PAIR = 1
@@ -112,7 +125,7 @@ class Trade:
 
     @id_wallet.setter
     def id_wallet(self, val: int):
-        if val is not None and type(val) is not int:
+        if type(val) is not int:
             raise ValueError("L'id du portefeuille doit être de type int")
         self._id_wallet = val
 
@@ -122,7 +135,9 @@ class Trade:
 
     @pair.setter
     def pair(self, val: str):
-        self._pair = str(val) if val is not None else None
+        if type(val) is not str:
+            raise ValueError("La paire du trade  doit être de type chaîne de caractères")
+        self._pair = val
 
     @property
     def type(self) -> TradeType:
@@ -130,7 +145,9 @@ class Trade:
 
     @type.setter
     def type(self, val: TradeType):
-        self._type = TradeType(val) if val is not None else None
+        if type(val) is not TradeType:
+            raise ValueError('Le type du trade doit être BUY ou SELL.')
+        self._type = val
 
     @property
     def qty(self) -> Decimal:
@@ -138,10 +155,9 @@ class Trade:
 
     @qty.setter
     def qty(self, val: Decimal):
-        if val is not None and not isinstance(val, Decimal):
-            self._qty = Decimal(str(val))
-        else:
-            self._qty = val
+        if type(val) is not Decimal:
+            raise ValueError('La quantité du trade doit être de type décimal.')
+        self._qty = val
 
     @property
     def price(self) -> Decimal:
@@ -149,10 +165,9 @@ class Trade:
 
     @price.setter
     def price(self, val: Decimal):
-        if val is not None and not isinstance(val, Decimal):
-            self._price = Decimal(str(val))
-        else:
-            self._price = val
+        if type(val) is not Decimal:
+            raise ValueError('Le prix du trade doit être de type décimal.')
+        self._price = val
 
     @property
     def total(self) -> Decimal:
@@ -160,10 +175,9 @@ class Trade:
 
     @total.setter
     def total(self, val: Decimal):
-        if val is not None and not isinstance(val, Decimal):
-            self._total = Decimal(str(val))
-        else:
-            self._total = val
+        if type(val) is not Decimal:
+            raise ValueError('Le total du trade doit être de type décimal.')
+        self._total = val
 
     @property
     def date(self) -> datetime:
@@ -171,12 +185,9 @@ class Trade:
 
     @date.setter
     def date(self, val: datetime):
-        if val is not None and type(val) is not datetime and type(val) is not str:
-            raise ValueError('La date doit être de type Date ou Str au format %Y-%m-%d %H:%M:%S')
-        if val is not None:
-            self._date = val if type(val) is datetime else datetime.strptime(val, '%Y-%m-%d %H:%M:%S')
-        else:
-            self._date = None
+        if type(val) is not datetime:
+            raise ValueError('La date doit être de type Date ou Str au format %Y-%m-%d %H:%M:%S.')
+        self._date = val
 
     @property
     def fee(self) -> Decimal:
@@ -184,10 +195,9 @@ class Trade:
 
     @fee.setter
     def fee(self, val: Decimal):
-        if val is not None and not isinstance(val, Decimal):
-            self._fee = Decimal(str(val))
-        else:
-            self._fee = val
+        if type(val) is not Decimal:
+            raise ValueError('La taxe (fee) doit être de type décimal.')
+        self._fee = val
 
     @property
     def fee_asset(self) -> str:
@@ -203,6 +213,8 @@ class Trade:
 
     @origin_id.setter
     def origin_id(self, val: str):
+        if type(val) is not str:
+            raise ValueError("L'id origine du trade doit être de type chaîne de caractères")
         self._origin_id = val
 
     @property
@@ -287,6 +299,7 @@ class Trade:
         """
         req = SQL_SELECT_FIND_TRADE
         parameters = []
+        trades = []
 
         # SQL request definition
         if id_wallet or pair or trade_type or begin_date or end_date or origin:
@@ -317,7 +330,7 @@ class Trade:
 
         ConnectionDB.get_cursor().execute(req, parameters)
         rows = ConnectionDB.get_cursor().fetchall()
-        return [Trade(*row) for row in rows]
+        return [Trade.__convert_row_to_trade(row) for row in rows]
 
     @staticmethod
     def read(id_: int) -> 'Trade':
@@ -332,8 +345,23 @@ class Trade:
         row = ConnectionDB.get_cursor().fetchone()
         if row is None:
             raise EntityNotFoundError(f"Le trade {id_} n'existe pas")
-        t = Trade(*row)
+        t = Trade.__convert_row_to_trade(row)
         return t
+
+    @staticmethod
+    def __convert_row_to_trade(row):
+        return Trade(row[SQL_SELECT_INDEX_ID],
+                     row[SQL_SELECT_INDEX_ID_WALLET],
+                     row[SQL_SELECT_INDEX_PAIR],
+                     TradeType(row[SQL_SELECT_INDEX_TYPE]),
+                     Decimal(str(row[SQL_SELECT_INDEX_QTY])),
+                     Decimal(str(row[SQL_SELECT_INDEX_PRICE])),
+                     Decimal(str(row[SQL_SELECT_INDEX_TOTAL])),
+                     datetime.strptime(row[SQL_SELECT_INDEX_DATE], '%Y-%m-%d %H:%M:%S'),
+                     Decimal(str(row[SQL_SELECT_INDEX_FEE])),
+                     row[SQL_SELECT_INDEX_FEE_ASSET],
+                     row[SQL_SELECT_INDEX_ORIGIN_ID],
+                     TradeOrigin(row[SQL_SELECT_INDEX_ORIGIN]))
 
     def save(self) -> None:
         """
