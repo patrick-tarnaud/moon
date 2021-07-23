@@ -15,8 +15,7 @@ DROP TABLE IF EXISTS trade;
 
 CREATE TABLE trade(
     id INTEGER PRIMARY KEY,
-    id_wallet INTEGER,
---    FOREIGN KEY (id_wallet) REFERENCES wallet (id),
+    id_wallet INTEGER REFERENCES wallet (id),
     pair TEXT,
     type TEXT,
     qty NUMERIC,
@@ -37,8 +36,7 @@ DROP TABLE IF EXISTS pnl;
 
 CREATE TABLE pnl(
     id INTEGER PRIMARY KEY,
-    id_wallet INTEGER,
---    FOREIGN KEY (id_wallet) REFERENCES wallet (id),
+    id_wallet INTEGER REFERENCES wallet (id),
     date DATETIME,
     asset TEXT,
     value NUMERIC,
@@ -54,8 +52,7 @@ DROP TABLE IF EXISTS pnl_total;
 
 CREATE TABLE pnl_total(
     id INTEGER PRIMARY KEY,
-    id_wallet INTEGER,
---    FOREIGN KEY (id_wallet) REFERENCES wallet (id),
+    id_wallet INTEGER REFERENCES wallet (id),
     asset TEXT,
     value NUMERIC,
     currency TEXT

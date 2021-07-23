@@ -15,10 +15,11 @@ WalletData = namedtuple('WalletData', 'qty pru currency',
 
 PnlData = namedtuple('PnlData', 'date asset value currency')
 
-SQL_READ_WALLET="select id, name, description from wallet where id = ?"
-SQL_FIND_WALLET="select id, name, description from wallet"
-SQL_INSERT_WALLET="insert into wallet(name, description) values(?, ?)"
-SQL_UPDATE_WALLET="update wallet set name = ?, description = ? where id = ?"
+SQL_READ_WALLET = "select id, name, description from wallet where id = ?"
+SQL_FIND_WALLET = "select id, name, description from wallet"
+SQL_INSERT_WALLET = "insert into wallet(name, description) values(?, ?)"
+SQL_UPDATE_WALLET = "update wallet set name = ?, description = ? where id = ?"
+
 
 @dataclass
 class PnlTotal:
@@ -29,15 +30,16 @@ class PnlTotal:
 
 class Wallet:
 
-    def __init__(self, id: Union[int, None], name: str, description: str = None, trades: list[Trade] = None, assets: dict[str, WalletData] = None,
-                 pnl: list[PnlData] = None, total_pnl: list[PnlTotal] = None):
+    def __init__(self, id: Union[int, None], name: str, description: str = '', trades: list[Trade] = None,
+                 assets: dict[str, WalletData] = None,
+                 pnl: list[PnlData] = None, pnl_total: list[PnlTotal] = None):
         self.id: int = id
         self.name: str = name
         self.description: str = description
         self.trades: list[Trade] = trades
         self.assets: dict[str, WalletData] = assets
         self.pnl: list[PnlData] = pnl
-        self.total_pnl: list[PnlTotal] = total_pnl
+        self.pnl_total: list[PnlTotal] = pnl_total
 
     @property
     def id(self) -> int:
@@ -45,8 +47,28 @@ class Wallet:
 
     @id.setter
     def id(self, val: int):
-        if val is not None and type(val) is not int:
-            raise ValueError("L'identifiant doit être un entier.")
+        if val is not None and (type(val) is not int or val < 0):
+            raise ValueError("L'identifiant doit être un entier supérieur à 0.")
+        self._id = val
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @name.setter
+    def name(self, val: str):
+        if not val or type(val) is not str:
+            raise ValueError("Le nom du portefeuille doit être une chaine de caractères.")
+        self._id = val
+
+    @property
+    def description(self) -> str:
+        return self._description
+
+    @description.setter
+    def description(self, val: str):
+        if type(val) is not str:
+            raise ValueError("La description du portefeuille doit être une chaine de caractères.")
         self._id = val
 
     @property
@@ -78,8 +100,8 @@ class Wallet:
         return self._pnl_total
 
     @pnl_total.setter
-    def pnl_total(self, pnl_total: list[PnlTotal]):
-        self._pnl_total = pnl_total
+    def pnl_total(self, val: list[PnlTotal]):
+        self._pnl_total = val
 
     @staticmethod
     def _import_trades(trades: list[Trade]) -> tuple[dict[str, WalletData], list[PnlData], list[PnlTotal]]:

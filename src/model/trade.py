@@ -115,8 +115,8 @@ class Trade:
 
     @id.setter
     def id(self, val: int):
-        if val is not None and type(val) is not int:
-            raise ValueError("L'id doit être de type int")
+        if val is not None and (type(val) is not int or val < 0):
+            raise ValueError("L'id doit être de type entier et supéreur à 0.")
         self._id = val
 
     @property
@@ -125,8 +125,8 @@ class Trade:
 
     @id_wallet.setter
     def id_wallet(self, val: int):
-        if type(val) is not int:
-            raise ValueError("L'id du portefeuille doit être de type int")
+        if type(val) is not int or val < 0:
+            raise ValueError("L'id du portefeuille doit être de type entier et supérieur à 0.")
         self._id_wallet = val
 
     @property
@@ -155,8 +155,8 @@ class Trade:
 
     @qty.setter
     def qty(self, val: Decimal):
-        if type(val) is not Decimal:
-            raise ValueError('La quantité du trade doit être de type décimal.')
+        if type(val) is not Decimal or val < 0:
+            raise ValueError('La quantité du trade doit être de type décimal et supérieure à 0.')
         self._qty = val
 
     @property
@@ -165,8 +165,8 @@ class Trade:
 
     @price.setter
     def price(self, val: Decimal):
-        if type(val) is not Decimal:
-            raise ValueError('Le prix du trade doit être de type décimal.')
+        if type(val) is not Decimal or val < 0:
+            raise ValueError('Le prix du trade doit être de type décimal et supérieur à 0.')
         self._price = val
 
     @property
@@ -175,8 +175,8 @@ class Trade:
 
     @total.setter
     def total(self, val: Decimal):
-        if type(val) is not Decimal:
-            raise ValueError('Le total du trade doit être de type décimal.')
+        if type(val) is not Decimal or val < 0:
+            raise ValueError('Le total du trade doit être de type décimal et supérieur à 0.')
         self._total = val
 
     @property
@@ -195,8 +195,8 @@ class Trade:
 
     @fee.setter
     def fee(self, val: Decimal):
-        if type(val) is not Decimal:
-            raise ValueError('La taxe (fee) doit être de type décimal.')
+        if type(val) is not Decimal or val < 0:
+            raise ValueError('La taxe (fee) doit être de type décimal et supérieure à 0.')
         self._fee = val
 
     @property
