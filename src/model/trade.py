@@ -6,7 +6,7 @@ from decimal import *
 from enum import Enum
 from typing import Union
 
-from exceptions.exceptions import EntityNotFoundError, AssetNotFoundError
+from exceptions.exceptions import EntityNotFoundError, BusinessError, Error
 from db.db import ConnectionDB
 
 
@@ -72,7 +72,7 @@ class Trade:
                  type_: Union[TradeType, str],
                  qty: Decimal,
                  price: Decimal,
-                 total: Decimal,
+                 total: Decimal = None,
                  date: Union[datetime, str] = datetime.now(),
                  fee: Decimal = Decimal('0.0'),
                  fee_asset: str = '',
@@ -109,121 +109,43 @@ class Trade:
         return hash((self.id_wallet, self.pair, self.qty, self.price, self.total, self.fee, self.fee_asset,
                      self.origin_id, self.origin))
 
-    @property
-    def id(self) -> int:
-        return self._id
-
-    @id.setter
-    def id(self, val: int):
-        if val is not None and (type(val) is not int or val < 0):
-            raise ValueError("L'id doit être de type entier et supéreur à 0.")
-        self._id = val
-
-    @property
-    def id_wallet(self) -> int:
-        return self._id_wallet
-
-    @id_wallet.setter
-    def id_wallet(self, val: int):
-        if type(val) is not int or val < 0:
-            raise ValueError("L'id du portefeuille doit être de type entier et supérieur à 0.")
-        self._id_wallet = val
-
-    @property
-    def pair(self) -> str:
-        return self._pair
-
-    @pair.setter
-    def pair(self, val: str):
-        if type(val) is not str:
-            raise ValueError("La paire du trade  doit être de type chaîne de caractères")
-        self._pair = val
-
-    @property
-    def type(self) -> TradeType:
-        return self._type
-
-    @type.setter
-    def type(self, val: TradeType):
-        if type(val) is not TradeType:
-            raise ValueError('Le type du trade doit être BUY ou SELL.')
-        self._type = val
-
-    @property
-    def qty(self) -> Decimal:
-        return self._qty
-
-    @qty.setter
-    def qty(self, val: Decimal):
-        if type(val) is not Decimal or val < 0:
-            raise ValueError('La quantité du trade doit être de type décimal et supérieure à 0.')
-        self._qty = val
-
-    @property
-    def price(self) -> Decimal:
-        return self._price
-
-    @price.setter
-    def price(self, val: Decimal):
-        if type(val) is not Decimal or val < 0:
-            raise ValueError('Le prix du trade doit être de type décimal et supérieur à 0.')
-        self._price = val
-
-    @property
-    def total(self) -> Decimal:
-        return self._total
-
-    @total.setter
-    def total(self, val: Decimal):
-        if type(val) is not Decimal or val < 0:
-            raise ValueError('Le total du trade doit être de type décimal et supérieur à 0.')
-        self._total = val
-
-    @property
-    def date(self) -> datetime:
-        return self._date
-
-    @date.setter
-    def date(self, val: datetime):
-        if type(val) is not datetime:
-            raise ValueError('La date doit être de type Date ou Str au format %Y-%m-%d %H:%M:%S.')
-        self._date = val
-
-    @property
-    def fee(self) -> Decimal:
-        return self._fee
-
-    @fee.setter
-    def fee(self, val: Decimal):
-        if type(val) is not Decimal or val < 0:
-            raise ValueError('La taxe (fee) doit être de type décimal et supérieure à 0.')
-        self._fee = val
-
-    @property
-    def fee_asset(self) -> str:
-        return self._fee_asset
-
-    @fee_asset.setter
-    def fee_asset(self, val: str):
-        self._fee_asset = val
-
-    @property
-    def origin_id(self) -> str:
-        return self._origin_id
-
-    @origin_id.setter
-    def origin_id(self, val: str):
-        if type(val) is not str:
-            raise ValueError("L'id origine du trade doit être de type chaîne de caractères")
-        self._origin_id = val
-
-    @property
-    def origin(self) -> TradeOrigin:
-        return self._origin
-
-    @origin.setter
-    def origin(self, val: TradeOrigin):
-        self._origin = TradeOrigin(val) if val is not None else None
+    def validate(self):
+        errors = []
+        if self.id is not None and (type(self.id) is not int or self.id < 0):
+            errors.append(Error("id", "L'id doit être de type entier et supéreur à 0."))
+        if self.id_wallet is None or type(self.id) is not int or self.id < 0:
+            errors.append(
+                Error("id_wallet",
+                      "L'id du portefeuille est obligatoire et doit être de type entier et supérieur à 0."))
+        if not self.pair or type(self.pair) is not str:
+            errors.append(Error("pair", "La paire du trade  doit être de type chaîne de caractères"))
+        if not self.type or type(self.type) is not TradeType:
+            errors.append(Error("type", "Le type du trade est obligatoire et doit être BUY ou SELL."))
+        if self.qty is None or type(self.qty) is not Decimal or self.qty < 0:
+            errors.append(Error("qty",
+                                "La quantité du trade est obligatoire et doit être un nombre décimal supérieur ou "
+                                "égal à 0."))
+        if self.price is None or type(self.price) is not Decimal or self.price < 0:
+            errors.append(Error("price",
+                                "Le prix du trade est obligatoire et doit être un nombre décimal supérieur ou égal à 0."))
+        if self.total is None or type(self.total) is not Decimal or self.total < 0:
+            errors.append(Error("total",
+                                "Le total du trade est obligatoire et doit être un nombre décimal supérieur ou égal "
+                                "à 0."))
+        if self.fee is None or type(self.fee) is not Decimal or self.fee < 0:
+            errors.append(
+                Error("fee", "La taxe du trade doit être un nombre décimal supérieur ou égal à 0."))
+        if self.fee_asset is None or type(self.fee_asset) is not str:
+            errors.append(Error("fee_asset",
+                                "L'asset de la taxe du trade doit être une chaîne de caratères."))
+        if self.origin_id is None or type(self.origin_id) is not str:
+            errors.append(Error("origin_id",
+                                "L'id de l'origine du trade doit être une chaîne de caratères."))
+        if self.origin is None or type(self.origin) is not TradeOrigin:
+            errors.append(Error("origin",
+                                "L'origine du trade doit être indiqué."))
+        if errors:
+            raise BusinessError(errors)
 
     def get_assets(self):
         buy_asset = None
