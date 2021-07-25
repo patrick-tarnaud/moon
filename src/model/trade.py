@@ -1,14 +1,14 @@
 import csv
-import os
-import sqlite3
 from datetime import datetime
 from decimal import *
 from enum import Enum
 from typing import Union
+import logging.config
 
 from exceptions.exceptions import EntityNotFoundError, BusinessError, Error
 from db.db import ConnectionDB
 
+logger = logging.getLogger(__name__)
 
 # enums
 class TradeType(Enum):
@@ -113,13 +113,13 @@ class Trade:
         errors = []
         if self.id is not None and (type(self.id) is not int or self.id < 0):
             errors.append(Error("id", "L'id doit être de type entier et supéreur à 0."))
-        if self.id_wallet is None or type(self.id) is not int or self.id < 0:
+        if self.id_wallet is None or type(self.id_wallet) is not int or self.id_wallet < 0:
             errors.append(
                 Error("id_wallet",
                       "L'id du portefeuille est obligatoire et doit être de type entier et supérieur à 0."))
         if not self.pair or type(self.pair) is not str:
             errors.append(Error("pair", "La paire du trade  doit être de type chaîne de caractères"))
-        if not self.type or type(self.type) is not TradeType:
+        if self.type is None or type(self.type) is not TradeType:
             errors.append(Error("type", "Le type du trade est obligatoire et doit être BUY ou SELL."))
         if self.qty is None or type(self.qty) is not Decimal or self.qty < 0:
             errors.append(Error("qty",
@@ -130,8 +130,8 @@ class Trade:
                                 "Le prix du trade est obligatoire et doit être un nombre décimal supérieur ou égal à 0."))
         if self.total is None or type(self.total) is not Decimal or self.total < 0:
             errors.append(Error("total",
-                                "Le total du trade est obligatoire et doit être un nombre décimal supérieur ou égal "
-                                "à 0."))
+                                "Le total du trade est obligatoire et doit être un nombre décimal supérieur ou égal à "
+                                "0."))
         if self.fee is None or type(self.fee) is not Decimal or self.fee < 0:
             errors.append(
                 Error("fee", "La taxe du trade doit être un nombre décimal supérieur ou égal à 0."))

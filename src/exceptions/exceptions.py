@@ -24,7 +24,6 @@ class Error:
 
 class BusinessError(Exception):
     def __init__(self, errors: list[Error] = None):
-        super().__init__()
         self.errors = errors if errors is not None else []
 
     def add_error(self, error: Error):

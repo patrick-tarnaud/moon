@@ -67,38 +67,38 @@ def imported_trades():
     return [
         Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('2'), Decimal('1000'), Decimal('2000'),
               datetime.strptime('2020-06-01 14:00:01', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('3'), Decimal('500'), Decimal('1500'),
               datetime.strptime('2020-06-01 14:00:02', '%Y-%m-%d %H:%M:%S'),
               Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('750'), Decimal('1500'),
               datetime.strptime('2020-06-01 14:00:03', '%Y-%m-%d %H:%M:%S'),
               Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('800'), Decimal('1600'),
               datetime.strptime('2020-06-01 14:00:04', '%Y-%m-%d %H:%M:%S'),
               Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('10'), Decimal('900'), Decimal('9000'),
               datetime.strptime('2020-06-01 14:00:05', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.SELL, Decimal('11'), Decimal('500'), Decimal('5500'),
               datetime.strptime('2020-06-01 14:00:06', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('5'), Decimal('1000'), Decimal('5000'),
               datetime.strptime('2020-06-01 14:00:07', '%Y-%m-%d %H:%M:%S'),
               Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.25'), Decimal('1.25'),
               datetime.strptime('2020-06-01 14:00:08', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.5'), Decimal('2.5'),
               datetime.strptime('2020-06-01 14:00:09', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
         Trade(None, 1, 'BNBBTC', TradeType.SELL, Decimal('5'), Decimal('1'), Decimal('5'),
               datetime.strptime('2020-06-01 14:00:10', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR','', TradeOrigin.BINANCE),
+              'EUR', '', TradeOrigin.BINANCE),
     ]
 
 
@@ -222,10 +222,10 @@ def test_read(fill_db):
 
 
 @patch.object(Wallet, '_is_creation')
-@patch.object(Wallet, '_validate')
-def test_save_for_creation(_validate, _is_creation, setup_db):
+@patch.object(Wallet, 'validate')
+def test_save_for_creation(validate, _is_creation, setup_db):
     _is_creation.return_value = True
-    _validate.return_value = True
+    validate.return_value = True
     wallet = Wallet(None, 'wallet1', 'description wallet1')
     wallet.save()
     assert wallet.id is not None
@@ -233,3 +233,15 @@ def test_save_for_creation(_validate, _is_creation, setup_db):
     assert new_wallet.id == 1
     assert new_wallet.name == 'wallet1'
     assert new_wallet.description == 'description wallet1'
+
+
+@patch.object(Wallet, '_is_creation')
+@patch.object(Wallet, 'validate')
+def test_save_for_update(validate, _is_creation, fill_db):
+    _is_creation.return_value = False
+    validate.return_value = True
+    wallet = Wallet.read(1)
+    wallet.description = 'description changed !'
+    wallet.save()
+    wallet = Wallet.read(1)
+    assert wallet.description == 'description changed !'

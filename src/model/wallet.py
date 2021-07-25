@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from decimal import *
 from typing import Union
 
-from exceptions.exceptions import EntityValidateError, EntityNotFoundError
+from exceptions.exceptions import EntityValidateError, EntityNotFoundError, Error, BusinessError
 from model.trade import Trade, TradeType
 from db.db import ConnectionDB
 
@@ -40,68 +40,6 @@ class Wallet:
         self.assets: dict[str, WalletData] = assets
         self.pnl: list[PnlData] = pnl
         self.pnl_total: list[PnlTotal] = pnl_total
-
-    @property
-    def id(self) -> int:
-        return self._id
-
-    @id.setter
-    def id(self, val: int):
-        if val is not None and (type(val) is not int or val < 0):
-            raise ValueError("L'identifiant doit être un entier supérieur à 0.")
-        self._id = val
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @name.setter
-    def name(self, val: str):
-        if not val or type(val) is not str:
-            raise ValueError("Le nom du portefeuille doit être une chaine de caractères.")
-        self._id = val
-
-    @property
-    def description(self) -> str:
-        return self._description
-
-    @description.setter
-    def description(self, val: str):
-        if type(val) is not str:
-            raise ValueError("La description du portefeuille doit être une chaine de caractères.")
-        self._id = val
-
-    @property
-    def trades(self) -> list[Trade]:
-        return self._trades
-
-    @trades.setter
-    def trades(self, trades: list[Trade]):
-        self._trades = trades
-
-    @property
-    def assets(self) -> dict[str, WalletData]:
-        return self._assets
-
-    @assets.setter
-    def assets(self, assets: dict[str, WalletData]):
-        self._assets = assets
-
-    @property
-    def pnl(self) -> list[PnlData]:
-        return self._pnl
-
-    @pnl.setter
-    def pnl(self, pnl: list[PnlData]):
-        self._pnl = pnl
-
-    @property
-    def pnl_total(self) -> list[PnlTotal]:
-        return self._pnl_total
-
-    @pnl_total.setter
-    def pnl_total(self, val: list[PnlTotal]):
-        self._pnl_total = val
 
     @staticmethod
     def _import_trades(trades: list[Trade]) -> tuple[dict[str, WalletData], list[PnlData], list[PnlTotal]]:
@@ -193,9 +131,14 @@ class Wallet:
     def _is_creation(self) -> bool:
         return self.id is None
 
-    def _validate(self):
-        if not self.name:
-            raise EntityValidateError("Le nom du wallet est obligatoire")
+    def validate(self):
+        errors = []
+        if not self.name or type(self.name) is not str:
+            errors.append(Error('name', 'Le nom du wallet doit être une chaîne de caractères et est obligatoire'))
+        if self.description is not None and type(self.description) is not str:
+            errors.append(Error('description', 'La description du wallet doit être une chaîne de caractères.'))
+        if errors:
+            raise BusinessError(errors)
 
     @staticmethod
     def read(id: int) -> 'Wallet':
@@ -212,10 +155,9 @@ class Wallet:
         return [Wallet(*row) for row in rows]
 
     def save(self):
-        global cur
-        self._validate()
+        self.validate()
         if self._is_creation():
             cur = ConnectionDB.get_cursor().execute(SQL_INSERT_WALLET, (self.name, self.description))
             self.id = cur.lastrowid
         else:
-            cur = ConnectionDB.get_cursor().execute(SQL_UPDATE_WALLET, (self.name, self.description, self.id))
+            ConnectionDB.get_cursor().execute(SQL_UPDATE_WALLET, (self.name, self.description, self.id))

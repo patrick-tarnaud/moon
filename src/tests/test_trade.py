@@ -6,6 +6,7 @@ import pytest
 
 from db.db import ConnectionDB
 from model.trade import Trade, TradeType, TradeOrigin
+from exceptions.exceptions import BusinessError, Error
 
 NB_TRADES = 9
 NB_BUY_TRADES = 6
@@ -102,6 +103,63 @@ def test_constructor_type(trade):
     assert type(trade.fee_asset) is str
     assert type(trade.origin_id) is str
     assert type(trade.origin) is TradeOrigin
+
+
+def test_validate_id_wallet():
+    trade = Trade(None, None, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
+                  'EUR', '1', TradeOrigin.BINANCE)
+    with pytest.raises(BusinessError) as be:
+        trade.validate()
+    e = be.value
+    assert e.has_error()
+    assert e.errors[0].code == 'id_wallet'
+
+
+def test_validate_pair():
+    trade = Trade(None, 1, '', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
+                  'EUR', '1', TradeOrigin.BINANCE)
+    with pytest.raises(BusinessError) as be:
+        trade.validate()
+    e = be.value
+    assert e.has_error()
+    assert e.errors[0].code == 'pair'
+
+
+def test_validate_type():
+    trade = Trade(None, 1, 'BTCEUR', 'PFFF', Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
+                  'EUR', '1', TradeOrigin.BINANCE)
+    with pytest.raises(BusinessError) as be:
+        trade.validate()
+    e = be.value
+    assert e.has_error()
+    assert e.errors[0].code == 'type'
+
+
+def test_validate_qty():
+    trade = Trade(None, 1, 'BTCEUR', TradeType.BUY, 100.0, Decimal('2.0'), Decimal('200.0'),
+                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
+                  'EUR', '1', TradeOrigin.BINANCE)
+    with pytest.raises(BusinessError) as be:
+        trade.validate()
+    e = be.value
+    assert e.has_error()
+    assert e.errors[0].code == 'qty'
+
+
+def test_validate_qty_and_price():
+    trade = Trade(None, 1, 'BTCEUR', TradeType.BUY, 100.0, 2.0, Decimal('200.0'),
+                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
+                  'EUR', '1', TradeOrigin.BINANCE)
+    with pytest.raises(BusinessError) as be:
+        trade.validate()
+    e = be.value
+    assert e.has_error()
+    assert len(e.errors) == 2
+    assert e.errors[0].code == 'qty'
+    assert e.errors[1].code == 'price'
 
 
 def test_equals(trade):
