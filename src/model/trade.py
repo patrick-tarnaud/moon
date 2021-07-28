@@ -266,7 +266,7 @@ class Trade:
         ConnectionDB.get_cursor().execute(SQL_SELECT_READ_TRADE, (id_,))
         row = ConnectionDB.get_cursor().fetchone()
         if row is None:
-            raise EntityNotFoundError(f"Le trade {id_} n'existe pas")
+            raise EntityNotFoundError(id_)
         t = Trade.__convert_row_to_trade(row)
         return t
 

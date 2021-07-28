@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from exceptions.exceptions import EntityNotFoundError
 from model.trade import Trade, TradeType, TradeOrigin
 from model.wallet import Wallet
 from db.db import ConnectionDB
@@ -245,3 +246,16 @@ def test_save_for_update(validate, _is_creation, fill_db):
     wallet.save()
     wallet = Wallet.read(1)
     assert wallet.description == 'description changed !'
+
+
+def test_delete(fill_db):
+    wallet = Wallet.read(1)
+    assert Wallet is not None
+    wallet.delete()
+    with pytest.raises(EntityNotFoundError):
+        Wallet.read(1)
+
+
+def test_delete_not_found(setup_db):
+    with pytest.raises(EntityNotFoundError):
+        wallet = Wallet.read(999)

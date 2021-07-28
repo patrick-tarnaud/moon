@@ -1,11 +1,6 @@
 from dataclasses import dataclass
 
 
-class EntityNotFoundError(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
-
-
 class AssetNotFoundError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
@@ -31,3 +26,8 @@ class BusinessError(Exception):
 
     def has_error(self):
         return len(self.errors) > 0
+
+
+class EntityNotFoundError(BusinessError):
+    def __init__(self, id_):
+        super().__init__([Error('id', f"L'entité {id_} n'existe pas.")])
