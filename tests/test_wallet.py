@@ -14,7 +14,7 @@ from db.db import ConnectionDB
 @pytest.fixture
 def setup_db():
     ConnectionDB.set_db(':memory:')
-    with open('./src/db/db.sql', 'r') as f:
+    with open('./moon/db/db.sql', 'r') as f:
         ddl = f.read()
         ConnectionDB.get_cursor().executescript(ddl)
 
@@ -110,7 +110,7 @@ def imported_trades():
 #     mock_filter_new_trades.return_value = imported_trades
 #     mock_get_trades_from_csv_file.return_value = imported_trades
 #     assets_dict, pnl_list, pnl_total_list = wallet.import_trades_from_csv_file(
-#         '/home/patrick/Dev/moon/src/tests/data/trades.csv')
+#         '/home/patrick/Dev/moon/moon/tests/data/trades.csv')
 #
 #     # assets dict controls
 #     assert len(assets_dict) == 3

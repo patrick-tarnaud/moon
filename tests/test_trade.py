@@ -67,7 +67,7 @@ def trades():
 @pytest.fixture
 def setup_db():
     ConnectionDB.set_db(':memory:')
-    with open('./src/db/db.sql', 'r') as f:
+    with open('./moon/db/db.sql', 'r') as f:
         ddl = f.read()
         ConnectionDB.get_cursor().executescript(ddl)
 
@@ -390,5 +390,5 @@ def test_get_pairs(fill_db):
     assert 'CAKEBNB' in pairs
 
 # def test_get_trades_from_csv_file():
-#     trades = Trade.get_trades_from_csv_file(os.path.join(os.getcwd(), 'src', 'tests', 'data', CSV_FILENAME))
+#     trades = Trade.get_trades_from_csv_file(os.path.join(os.getcwd(), 'moon', 'tests', 'data', CSV_FILENAME))
 #     assert len(trades) == NB_TRADES_IN_CSV
