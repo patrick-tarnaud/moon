@@ -28,16 +28,23 @@ CREATE TABLE trade(
     origin TEXT
 );
 
+CREATE INDEX trade_id_index ON trade (id ASC);
+
+-- asset_wallet
+
+DROP TABLE IF EXISTS asset_wallet;
+
 CREATE TABLE asset_wallet(
     id INTEGER PRIMARY KEY,
-    id_wallet INTEGER REFERENCES wallet(id)
+    id_wallet INTEGER REFERENCES wallet (id),
     asset TEXT,
     qty NUMERIC,
     pru NUMERIC,
     currency TEXT
 );
 
-CREATE INDEX trade_id_index ON trade (id ASC);
+CREATE INDEX asset_wallet_id_index ON asset_wallet (id ASC);
+
 
 -- pnl
 

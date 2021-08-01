@@ -2,13 +2,14 @@ import csv
 from datetime import datetime
 from decimal import *
 from enum import Enum
-from typing import Union
+from typing import Union, Any
 import logging.config
 
 from exceptions.exceptions import EntityNotFoundError, BusinessError, Error
 from db.db import ConnectionDB
 
 logger = logging.getLogger(__name__)
+
 
 # enums
 class TradeType(Enum):
@@ -69,7 +70,7 @@ class Trade:
                  id_: Union[int, None],
                  id_wallet: int,
                  pair: str,
-                 type_: Union[TradeType, str],
+                 type_: TradeType,
                  qty: Decimal,
                  price: Decimal,
                  total: Decimal = None,
@@ -172,7 +173,7 @@ class Trade:
         # search in db all trades in the interval
         begin_date = min(trades, key=lambda t: t.date).date
         end_date = max(trades, key=lambda t: t.date).date
-        trades_in_db = Trade.find(id_wallet=id_wallet, begin_date=begin_date, end_date=end_date)
+        trades_in_db = Trade.find(id_wallet=id_wallet, begin_date=begin_date, end_date=end_date) # type: ignore
 
         # return difference between trades set and db set
         return sorted(list(set(trades) - set(trades_in_db)), key=lambda t: t.date)
@@ -220,8 +221,8 @@ class Trade:
         :returns: trades list accordingly to the criterias
         """
         req = SQL_SELECT_FIND_TRADE
-        parameters = []
-        trades = []
+        parameters: list[Any] = []
+        trades: list[Trade] = []
 
         # SQL request definition
         if id_wallet or pair or trade_type or begin_date or end_date or origin:
@@ -318,7 +319,7 @@ class Trade:
         """
         # transform original list to get the values of the enums (type and origin)
         update_trades = [trade for trade in trades if trade.id is not None]
-        update_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty),
+        update_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
                                                 float(trade.price), float(trade.total), trade.date,
                                                 float(trade.fee),
                                                 trade.fee_asset,
@@ -327,7 +328,7 @@ class Trade:
         ConnectionDB.get_cursor().executemany(SQL_UPDATE_TRADE, update_trades)
 
         insert_trades = [trade for trade in trades if trade.id is None]
-        insert_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty),
+        insert_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
                                                 float(trade.price), float(trade.total), trade.date,
                                                 float(trade.fee),
                                                 trade.fee_asset,
@@ -341,7 +342,7 @@ class Trade:
         """
         Delete trade
         """
-        Trade.read(self.id)
+        Trade.read(self.id) # type: ignore
         ConnectionDB.get_cursor().execute(SQL_DELETE_TRADE, (self.id,))
         ConnectionDB.commit()
 
@@ -359,7 +360,7 @@ class Trade:
         return pairs
 
     @staticmethod
-    def get_trades_from_csv_file(filename: str) -> list['Trade']:
+    def get_trades_from_csv_file(id_wallet: int, filename: str) -> list['Trade']:
         """
         Read trades from csv file (with ';' delimiter) and return them
 
@@ -372,8 +373,8 @@ class Trade:
         with open(filename) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             for row in csv_reader:
-                trades.append(Trade(None, None, row[BINANCE_CSV_INDEX_PAIR],
-                                    row[BINANCE_CSV_INDEX_TRADE_TYPE],
+                trades.append(Trade(None, id_wallet, row[BINANCE_CSV_INDEX_PAIR],
+                                    TradeType(row[BINANCE_CSV_INDEX_TRADE_TYPE]),
                                     Decimal(row[BINANCE_CSV_INDEX_QTY]),
                                     Decimal(row[BINANCE_CSV_INDEX_PRICE]),
                                     Decimal(row[BINANCE_CSV_INDEX_TOTAl]),

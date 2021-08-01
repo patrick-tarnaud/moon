@@ -1,11 +1,11 @@
 import logging.config
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import *
-from typing import Union
+from typing import Union, Optional
 
-from exceptions.exceptions import EntityValidateError, EntityNotFoundError, Error, BusinessError
+from exceptions.exceptions import EntityNotFoundError, Error, BusinessError
 from model.trade import Trade, TradeType, TradeOrigin
 from db.db import ConnectionDB
 from model.asset_wallet import AssetWallet
@@ -36,16 +36,16 @@ class PnlTotal:
 
 class Wallet:
 
-    def __init__(self, id: Union[int, None], name: str, description: str = '', trades: list[Trade] = None,
+    def __init__(self, id: Optional[int], name: str, description: str = '', trades: list[Trade] = None,
                  assets: dict[str, AssetWallet] = None,
                  pnl: list[Pnl] = None, pnl_total: list[PnlTotal] = None):
-        self.id: int = id
-        self.name: str = name
-        self.description: str = description
-        self.trades: list[Trade] = trades
-        self.assets: dict[str, AssetWallet] = assets
-        self.pnl: list[Pnl] = pnl
-        self.pnl_total: list[PnlTotal] = pnl_total
+        self.id = id
+        self.name = name
+        self.description = description
+        self.trades = trades
+        self.assets = assets
+        self.pnl = pnl
+        self.pnl_total = pnl_total
 
     @staticmethod
     def _import_trades(trades: list[Trade]) -> tuple[dict[str, AssetWallet], list[Pnl], list[PnlTotal]]:
@@ -119,11 +119,10 @@ class Wallet:
     # merge
 
     def import_trades_from_csv_file(self, filename: str):
-        csv_trades = Trade.get_trades_from_csv_file(filename)
+        csv_trades = Trade.get_trades_from_csv_file(self.id, filename)
         new_trades = Trade.filter_new_trades(csv_trades)
         assets, pnl, pnl_total = Wallet._import_trades(new_trades)
         self._merge(assets, pnl, pnl_total)
-
         return assets, pnl, pnl_total
 
     def _is_creation(self) -> bool:
@@ -161,13 +160,13 @@ class Wallet:
             ConnectionDB.get_cursor().execute(SQL_UPDATE_WALLET, (self.name, self.description, self.id))
 
     def delete(self) -> None:
-        Wallet.read(self.id)
+        Wallet.read(self.id) # type: ignore
         ConnectionDB.get_cursor().execute(SQL_DELETE_WALLET, (self.id,))
 
     def load_trades(self, pair: str = None, trade_type: TradeType = None, begin_date: datetime = None,
                     end_date: datetime = None, origin: TradeOrigin = None) -> list['Trade']:
         self.trades = Trade.find(self.id, *list(locals().values())[1:])
-        return self.trades
+        return self.trades #type: ignore
 
     def load_pnl(self, begin_date: datetime = None, end_date: datetime = None) -> list[Pnl]:
         pass
