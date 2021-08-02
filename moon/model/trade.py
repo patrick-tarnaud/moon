@@ -68,7 +68,6 @@ class Trade:
 
     def __init__(self,
                  id_: Union[int, None],
-                 id_wallet: int,
                  pair: str,
                  type_: TradeType,
                  qty: Decimal,
@@ -80,7 +79,6 @@ class Trade:
                  origin_id: str = '',
                  origin: TradeOrigin = TradeOrigin.OTHER):
         self.id = id_
-        self.id_wallet = id_wallet
         self.pair = pair
         self.type = type_
         self.qty = qty
@@ -93,7 +91,7 @@ class Trade:
         self.origin = origin
 
     def __repr__(self):
-        return f'Trade(id={self.id}, id_wallet={self.id_wallet}, pair={self.pair}, type={self.type}, qty={self.qty}, ' \
+        return f'Trade(id={self.id}, pair={self.pair}, type={self.type}, qty={self.qty}, ' \
                f'price={self.price}, total={self.total}, date={self.date}, fee={self.fee}, fee_asset={self.fee_asset},' \
                f'origin_id={self.origin_id}, origin={self.origin})'
 
@@ -101,23 +99,19 @@ class Trade:
         if not isinstance(other, Trade):
             return False
         return (
-                self.id_wallet == other.id_wallet and self.pair == other.pair and self.type == other.type and
+                self.pair == other.pair and self.type == other.type and
                 self.qty == other.qty and self.price == other.price and self.total == other.total
                 and self.date == other.date and self.fee == other.fee and self.fee_asset == other.fee_asset and
                 self.origin_id == other.origin_id and self.origin == other.origin)
 
     def __hash__(self):
-        return hash((self.id_wallet, self.pair, self.qty, self.price, self.total, self.fee, self.fee_asset,
+        return hash((self.pair, self.qty, self.price, self.total, self.fee, self.fee_asset,
                      self.origin_id, self.origin))
 
     def validate(self):
         errors = []
         if self.id is not None and (type(self.id) is not int or self.id < 0):
             errors.append(Error("id", "L'id doit être de type entier et supéreur à 0."))
-        if self.id_wallet is None or type(self.id_wallet) is not int or self.id_wallet < 0:
-            errors.append(
-                Error("id_wallet",
-                      "L'id du portefeuille est obligatoire et doit être de type entier et supérieur à 0."))
         if not self.pair or type(self.pair) is not str:
             errors.append(Error("pair", "La paire du trade  doit être de type chaîne de caractères"))
         if self.type is None or type(self.type) is not TradeType:
@@ -188,9 +182,7 @@ class Trade:
         :return: the saved trades
         """
         new_trades = Trade.filter_new_trades(id_wallet, trades)
-        for trade in new_trades:
-            trade.id_wallet = id_wallet
-        Trade.save_all(new_trades)
+        Trade.save_all(id_wallet, new_trades)
         return new_trades
 
     @staticmethod
@@ -222,7 +214,6 @@ class Trade:
         """
         req = SQL_SELECT_FIND_TRADE
         parameters: list[Any] = []
-        trades: list[Trade] = []
 
         # SQL request definition
         if id_wallet or pair or trade_type or begin_date or end_date or origin:
@@ -274,7 +265,6 @@ class Trade:
     @staticmethod
     def __convert_row_to_trade(row):
         return Trade(row[SQL_SELECT_INDEX_ID],
-                     row[SQL_SELECT_INDEX_ID_WALLET],
                      row[SQL_SELECT_INDEX_PAIR],
                      TradeType(row[SQL_SELECT_INDEX_TYPE]),
                      Decimal(str(row[SQL_SELECT_INDEX_QTY])),
@@ -286,7 +276,7 @@ class Trade:
                      row[SQL_SELECT_INDEX_ORIGIN_ID],
                      TradeOrigin(row[SQL_SELECT_INDEX_ORIGIN]))
 
-    def save(self) -> None:
+    def save(self, id_wallet: int) -> None:
         """
         Save or update a trade (insert or update in db)
 
@@ -295,7 +285,7 @@ class Trade:
         # update in db
         if self.id is not None:
             ConnectionDB.get_cursor().execute(SQL_UPDATE_TRADE,
-                                              (self.id_wallet, self.pair, self.type.value, float(self.qty),
+                                              (id_wallet, self.pair, self.type.value, float(self.qty),
                                                float(self.price), float(self.total), self.date,
                                                float(self.fee),
                                                self.fee_asset,
@@ -303,7 +293,7 @@ class Trade:
         # insert in db
         else:
             cur = ConnectionDB.get_cursor().execute(SQL_INSERT_TRADE,
-                                                    (self.id_wallet, self.pair, self.type.value, float(self.qty),
+                                                    (id_wallet, self.pair, self.type.value, float(self.qty),
                                                      float(self.price), float(self.total), self.date,
                                                      float(self.fee),
                                                      self.fee_asset,
@@ -311,7 +301,7 @@ class Trade:
             self.id = cur.lastrowid
 
     @staticmethod
-    def save_all(trades: list['Trade']) -> None:
+    def save_all(id_wallet: int, trades: list['Trade']) -> None:
         """
         Save all trades passed i parameter (update or insert in db)
 
@@ -319,7 +309,7 @@ class Trade:
         """
         # transform original list to get the values of the enums (type and origin)
         update_trades = [trade for trade in trades if trade.id is not None]
-        update_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
+        update_trades = list(map(lambda trade: (id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
                                                 float(trade.price), float(trade.total), trade.date,
                                                 float(trade.fee),
                                                 trade.fee_asset,
@@ -328,7 +318,7 @@ class Trade:
         ConnectionDB.get_cursor().executemany(SQL_UPDATE_TRADE, update_trades)
 
         insert_trades = [trade for trade in trades if trade.id is None]
-        insert_trades = list(map(lambda trade: (trade.id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
+        insert_trades = list(map(lambda trade: (id_wallet, trade.pair, trade.type.value, float(trade.qty), # type: ignore
                                                 float(trade.price), float(trade.total), trade.date,
                                                 float(trade.fee),
                                                 trade.fee_asset,
@@ -360,7 +350,7 @@ class Trade:
         return pairs
 
     @staticmethod
-    def get_trades_from_csv_file(id_wallet: int, filename: str) -> list['Trade']:
+    def get_trades_from_csv_file(filename: str) -> list['Trade']:
         """
         Read trades from csv file (with ';' delimiter) and return them
 
@@ -373,7 +363,7 @@ class Trade:
         with open(filename) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             for row in csv_reader:
-                trades.append(Trade(None, id_wallet, row[BINANCE_CSV_INDEX_PAIR],
+                trades.append(Trade(None, row[BINANCE_CSV_INDEX_PAIR],
                                     TradeType(row[BINANCE_CSV_INDEX_TRADE_TYPE]),
                                     Decimal(row[BINANCE_CSV_INDEX_QTY]),
                                     Decimal(row[BINANCE_CSV_INDEX_PRICE]),

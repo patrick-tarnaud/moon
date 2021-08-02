@@ -22,7 +22,7 @@ NB_TRADES_IN_CSV = 7
 
 @pytest.fixture
 def trade():
-    return Trade(1, 1, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+    return Trade(1, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                  'EUR', '1', TradeOrigin.BINANCE)
 
@@ -30,35 +30,35 @@ def trade():
 @pytest.fixture()
 def trades():
     return [
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
+        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
               datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BTCEUR', TradeType.SELL, Decimal('50'), Decimal('4'), Decimal('200'),
+        Trade(None, 'BTCEUR', TradeType.SELL, Decimal('50'), Decimal('4'), Decimal('200'),
               datetime.strptime('2021-05-05 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'ETHEUR', TradeType.BUY, Decimal('300'), Decimal('1'), Decimal('300'),
+        Trade(None, 'ETHEUR', TradeType.BUY, Decimal('300'), Decimal('1'), Decimal('300'),
               datetime.strptime('2021-05-06 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'ETHEUR', TradeType.BUY, Decimal('150'), Decimal('1.5'), Decimal('225'),
+        Trade(None, 'ETHEUR', TradeType.BUY, Decimal('150'), Decimal('1.5'), Decimal('225'),
               datetime.strptime('2021-05-07 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'ETHEUR', TradeType.SELL, Decimal('100'), Decimal('2'), Decimal('200'),
+        Trade(None, 'ETHEUR', TradeType.SELL, Decimal('100'), Decimal('2'), Decimal('200'),
               datetime.strptime('2021-05-08 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BNBEUR', TradeType.BUY, Decimal('300'), Decimal('1'), Decimal('300'),
+        Trade(None, 'BNBEUR', TradeType.BUY, Decimal('300'), Decimal('1'), Decimal('300'),
               datetime.strptime('2021-08-06 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BNBEUR', TradeType.SELL, Decimal('100'), Decimal('1.5'), Decimal('150'),
+        Trade(None, 'BNBEUR', TradeType.SELL, Decimal('100'), Decimal('1.5'), Decimal('150'),
               datetime.strptime('2021-08-06 15:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'CAKEBNB', TradeType.BUY, Decimal('500'), Decimal('2'), Decimal('1000'),
+        Trade(None, 'CAKEBNB', TradeType.BUY, Decimal('500'), Decimal('2'), Decimal('1000'),
               datetime.strptime('2021-08-06 16:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE)
     ]
@@ -74,7 +74,7 @@ def setup_db():
 
 @pytest.fixture
 def fill_db(setup_db, trades):
-    Trade.save_all(trades)
+    Trade.save_all(1, trades)
 
 
 def test_constructor_value(trade):
@@ -105,19 +105,8 @@ def test_constructor_type(trade):
     assert type(trade.origin) is TradeOrigin
 
 
-def test_validate_id_wallet():
-    trade = Trade(None, None, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
-                  datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
-                  'EUR', '1', TradeOrigin.BINANCE)
-    with pytest.raises(BusinessError) as be:
-        trade.validate()
-    e = be.value
-    assert e.has_error()
-    assert e.errors[0].code == 'id_wallet'
-
-
 def test_validate_pair():
-    trade = Trade(None, 1, '', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+    trade = Trade(None, '', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     with pytest.raises(BusinessError) as be:
@@ -128,7 +117,7 @@ def test_validate_pair():
 
 
 def test_validate_type():
-    trade = Trade(None, 1, 'BTCEUR', 'PFFF', Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+    trade = Trade(None,  'BTCEUR', 'PFFF', Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     with pytest.raises(BusinessError) as be:
@@ -139,7 +128,7 @@ def test_validate_type():
 
 
 def test_validate_qty():
-    trade = Trade(None, 1, 'BTCEUR', TradeType.BUY, 100.0, Decimal('2.0'), Decimal('200.0'),
+    trade = Trade(None,  'BTCEUR', TradeType.BUY, 100.0, Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     with pytest.raises(BusinessError) as be:
@@ -150,7 +139,7 @@ def test_validate_qty():
 
 
 def test_validate_qty_and_price():
-    trade = Trade(None, 1, 'BTCEUR', TradeType.BUY, 100.0, 2.0, Decimal('200.0'),
+    trade = Trade(None,  'BTCEUR', TradeType.BUY, 100.0, 2.0, Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     with pytest.raises(BusinessError) as be:
@@ -163,34 +152,34 @@ def test_validate_qty_and_price():
 
 
 def test_equals(trade):
-    other = Trade(1, 1, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+    other = Trade(1,  'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other == trade
 
 
 def test_equals_no_id(trade):
-    other = Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
+    other = Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other == trade
 
 
 def test_not_equals(trade):
-    other = Trade(1, 1, 'BTCEUR', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
+    other = Trade(1,  'BTCEUR', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     assert other != trade
 
 
 def test_get_assets():
-    trade = Trade(1, 1, 'BTCEUR', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
+    trade = Trade(1,  'BTCEUR', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     buy_asset, sell_asset = trade.get_assets()
     assert buy_asset == 'BTC'
     assert sell_asset == 'EUR'
-    trade = Trade(1, 1, 'BTCSXP', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
+    trade = Trade(1,  'BTCSXP', TradeType.BUY, Decimal('1000.0'), Decimal('2.0'), Decimal('200.0'),
                   datetime.fromisoformat('2021-01-01 14:00:00'), Decimal('0.5'),
                   'EUR', '1', TradeOrigin.BINANCE)
     buy_asset, sell_asset = trade.get_assets()
@@ -202,10 +191,10 @@ def test_get_assets():
 def test_filter_new_trades_0_new_trade(mock_find, trades):
     mock_find.return_value = trades
     origin_trades = [
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
               datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE)]
@@ -218,16 +207,16 @@ def test_filter_new_trades_0_new_trade(mock_find, trades):
 def test_filter_new_trades_1_new_trade_for_date(mock_find, trades):
     mock_find.return_value = trades
     origin_trades = [
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 13:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('200'), Decimal('3'), Decimal('600'),
               datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE)]
     new_trades = Trade.filter_new_trades(1, origin_trades)
     assert len(new_trades) == 1
-    assert new_trades[0] == Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+    assert new_trades[0] == Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
                                   datetime.strptime('2021-05-03 13:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
                                   'EUR', '', TradeOrigin.BINANCE)
     assert mock_find.call_count == 1
@@ -237,16 +226,16 @@ def test_filter_new_trades_1_new_trade_for_date(mock_find, trades):
 def test_filter_new_trades_1_new_trade_for_qty(mock_find, trades):
     mock_find.return_value = trades
     origin_trades = [
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('3'), Decimal('600'),
+        Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('3'), Decimal('600'),
               datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'),
               Decimal('0.10'),
               'EUR', '', TradeOrigin.BINANCE)]
     new_trades = Trade.filter_new_trades(1, origin_trades)
     assert len(new_trades) == 1
-    assert new_trades[0] == Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('3'), Decimal('600'),
+    assert new_trades[0] == Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('3'), Decimal('600'),
                                   datetime.strptime('2021-05-04 14:00:00', '%Y-%m-%d %H:%M:%S'),
                                   Decimal('0.10'),
                                   'EUR', '', TradeOrigin.BINANCE)
@@ -317,14 +306,13 @@ def test_delete_existing_trade(fill_db):
 
 
 def test_read_min(setup_db):
-    t = Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+    t = Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'))
-    t.save()
+    t.save(1)
     trade = Trade.read(1)
     assert trade == t
 
     assert trade.id == t.id
-    assert trade.id_wallet == t.id_wallet
     assert trade.pair == t.pair
     assert trade.qty == t.qty
     assert trade.price == t.price
@@ -341,15 +329,14 @@ def test_read_min(setup_db):
 
 
 def test_read(setup_db):
-    t = Trade(None, 1, 'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
+    t = Trade(None,  'BTCEUR', TradeType.BUY, Decimal('100'), Decimal('2.5'), Decimal('250'),
               datetime.strptime('2021-05-03 14:00:00', '%Y-%m-%d %H:%M:%S'), Decimal('0.0'), 'EUR', '999',
               TradeOrigin.BINANCE)
-    t.save()
+    t.save(1)
     trade = Trade.read(1)
     assert trade == t
 
     assert trade.id == t.id
-    assert trade.id_wallet == t.id_wallet
     assert trade.pair == t.pair
     assert trade.qty == t.qty
     assert trade.price == t.price
@@ -368,7 +355,7 @@ def test_read(setup_db):
 def test_save(setup_db, trades):
     found_trades = Trade.find()
     assert len(found_trades) == 0
-    Trade.save(trades.pop())
+    trades.pop().save(1)
     found_trades = Trade.find()
     assert len(found_trades) == 1
 
@@ -376,7 +363,7 @@ def test_save(setup_db, trades):
 def test_save_all(setup_db, trades):
     found_trades = Trade.find()
     assert len(found_trades) == 0
-    Trade.save_all(trades)
+    Trade.save_all(1, trades)
     found_trades = Trade.find()
     assert len(found_trades) == NB_TRADES
 

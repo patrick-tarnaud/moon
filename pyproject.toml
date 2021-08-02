@@ -8,6 +8,7 @@ authors = ["Patrick Tarnaud <patrick.tarnaud@mail.com>"]
 python = ">=3.9,<3.10"
 PySide6 = "^6.1.2"
 Babel = "^2.9.1"
+dateutils = "^0.6.12"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
