@@ -1,15 +1,15 @@
 import logging.config
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import *
-from typing import Union, Optional
+from typing import Optional
 
 from exceptions.exceptions import EntityNotFoundError, Error, BusinessError
 from model.trade import Trade, TradeType, TradeOrigin
 from db.db import ConnectionDB
 from model.assets_wallet import AssetWalletData, AssetsWallet
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 SQL_READ_WALLET = "select id, name, description from wallet where id = ?"
@@ -36,10 +36,10 @@ class PnlTotal:
 
 class Wallet:
 
-    def __init__(self, id: Optional[int], name: str, description: str = '', trades: Optional[list[Trade]] = None,
+    def __init__(self, id_: Optional[int], name: str, description: str = '', trades: Optional[list[Trade]] = None,
                  assets: Optional[AssetsWallet] = None,
                  pnl: Optional[list[Pnl]] = None, pnl_total: Optional[list[PnlTotal]] = None):
-        self.id = id
+        self.id = id_
         self.name = name
         self.description = description
         self.trades = trades
@@ -48,7 +48,7 @@ class Wallet:
         self.pnl_total = pnl_total
 
     @staticmethod
-    def _import_trades(id_wallet:int, trades: list[Trade]) -> tuple[AssetsWallet, list[Pnl], list[PnlTotal]]:
+    def _import_trades(id_wallet: int, trades: list[Trade]) -> tuple[AssetsWallet, list[Pnl], list[PnlTotal]]:
         logger.debug('Entry _import_trades')
         assets_wallet: AssetsWallet = AssetsWallet(id_wallet)
         pnl_list: list[Pnl] = []
@@ -69,7 +69,7 @@ class Wallet:
                         asset1].pru) + trade.total) / qty) if qty != 0.0 else Decimal('0.0')
                     assets_wallet[asset1] = AssetWalletData(None, qty, pru, asset2)
                     assets_wallet[asset2] = AssetWalletData(None, assets_wallet[asset2].qty - trade.total,
-                                                           assets_wallet[asset2].pru, assets_wallet[asset2].currency)
+                                                            assets_wallet[asset2].pru, assets_wallet[asset2].currency)
                     logger.debug('BUY')
                     logger.debug(f"qty : {qty}")
                     logger.debug(f"pru : {pru}")
@@ -88,11 +88,11 @@ class Wallet:
                         pnl_total = pnl
                         pnl_total_list.append(PnlTotal(asset1, pnl_total, asset2))
                     assets_wallet[asset1] = AssetWalletData(None, qty,
-                                                           assets_wallet[asset1].pru if qty != 0 else Decimal('0.0'),
-                                                           asset2)
+                                                            assets_wallet[asset1].pru if qty != 0 else Decimal('0.0'),
+                                                            asset2)
                     assets_wallet[asset2] = AssetWalletData(None, assets_wallet[asset2].qty + trade.total,
-                                                           assets_wallet[asset2].pru,
-                                                           assets_wallet[asset2].currency)
+                                                            assets_wallet[asset2].pru,
+                                                            assets_wallet[asset2].currency)
                     logger.debug('SELL')
                     logger.debug(f"qty : {qty}")
                     logger.debug(f"pnl : {pnl}")
@@ -101,8 +101,8 @@ class Wallet:
                     logger.debug(f"assets_wallet[{asset2}] : {assets_wallet[asset2]}")
                 # fees
                 assets_wallet[fee_asset] = AssetWalletData(None, assets_wallet[fee_asset].qty - trade.fee,
-                                                          assets_wallet[fee_asset].pru,
-                                                          assets_wallet[fee_asset].currency)
+                                                           assets_wallet[fee_asset].pru,
+                                                           assets_wallet[fee_asset].currency)
                 logger.debug(f"assets_wallet[{fee_asset}] : {assets_wallet[fee_asset]}")
 
         return assets_wallet, sorted(pnl_list, key=lambda e: e.date), pnl_total_list
