@@ -1,10 +1,11 @@
 import sqlite3
+from typing import Optional
 
 
 class ConnectionDB:
-    db: str = None
-    conn: sqlite3.Connection = None
-    cur: sqlite3.Cursor = None
+    db: str = ''
+    conn: Optional[sqlite3.Connection] = None
+    cur: Optional[sqlite3.Cursor] = None
 
     @staticmethod
     def set_db(db: str):
@@ -21,7 +22,7 @@ class ConnectionDB:
     def get_cursor() -> sqlite3.Cursor:
         if ConnectionDB.cur is None:
             ConnectionDB.get_connection()
-        return ConnectionDB.cur
+        return ConnectionDB.cur # type: ignore
 
     @staticmethod
     def commit():

@@ -2,7 +2,7 @@ import csv
 from datetime import datetime
 from decimal import *
 from enum import Enum
-from typing import Union, Any
+from typing import Union, Any, Optional
 import logging.config
 
 from exceptions.exceptions import EntityNotFoundError, BusinessError, Error
@@ -67,18 +67,18 @@ ASSET_LIST = (
 class Trade:
 
     def __init__(self,
-                 id_: Union[int, None],
+                 id: Optional[int],
                  pair: str,
                  type_: TradeType,
                  qty: Decimal,
                  price: Decimal,
-                 total: Decimal = None,
+                 total: Optional[Decimal] = None,
                  date: Union[datetime, str] = datetime.now(),
                  fee: Decimal = Decimal('0.0'),
                  fee_asset: str = '',
                  origin_id: str = '',
                  origin: TradeOrigin = TradeOrigin.OTHER):
-        self.id = id_
+        self.id = id
         self.pair = pair
         self.type = type_
         self.qty = qty
@@ -158,9 +158,9 @@ class Trade:
     def filter_new_trades(id_wallet: int, trades: list['Trade']) -> list['Trade']:
         """
         Returns the trades that don't already exist in the wallet among those passed in parameters
-        @:param id_wallet: wallet's id
-        @:param trades: the trades to filter
-        @:return: the new trades passed for the wallet
+        :param id_wallet: wallet's id
+        :param trades: the trades to filter
+        :return: the new trades passed for the wallet
         """
 
         # get the interval of time for loading trades from db
@@ -371,7 +371,7 @@ class Trade:
                                     row[BINANCE_CSV_INDEX_DATE],
                                     Decimal(row[BINANCE_CSV_INDEX_FEE]),
                                     row[BINANCE_CSV_INDEX_FEE_ASSET],
-                                    None,
+                                    '',
                                     TradeOrigin.BINANCE))
 
         return trades
