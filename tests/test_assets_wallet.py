@@ -55,12 +55,12 @@ def test_load(fill_db):
     assert len(aw2) == 1
 
 
-def test_insert(fill_db):
+def test_insert_assets(fill_db):
     aw = AssetsWallet.load(1)
     new_aw = {}
     new_aw['ADA'] = AssetWalletData(None, Decimal('11.0'), Decimal('2.0'), 'EUR')
     new_aw['DOT'] = AssetWalletData(None, Decimal('5.5'), Decimal('1.9'), 'EUR')
-    aw._insert(new_aw)
+    aw._insert_assets(new_aw)
     aw = AssetsWallet.load(1)
     assert len(aw) == 4
     assert 'ADA' in aw.assets_wallet.keys()
@@ -75,26 +75,26 @@ def test_insert(fill_db):
     assert aw.assets_wallet['DOT'].currency == 'EUR'
 
 
-def test_update(fill_db):
+def test_update_assets(fill_db):
     aw = AssetsWallet.load(1)
-    aw._update({'BTC': AssetWalletData(aw['BTC'].id, Decimal('120.0'), Decimal('3.0'), 'EUR')})
+    aw._update_assets({'BTC': AssetWalletData(aw['BTC'].id, Decimal('120.0'), Decimal('3.0'), 'EUR')})
     aw = AssetsWallet.load(1)
     assert len(aw.get_assets()) == 2
     assert aw['BTC'].qty == Decimal('120.0')
     assert aw['BTC'].pru == Decimal('3.0')
 
-def test_delete(fill_db):
+def test_delete_assets(fill_db):
     aw = AssetsWallet.load(1)
     assert len(aw) == 2
-    aw._delete([aw['BTC'].id])
+    aw._delete_assets([aw['BTC'].id])
     aw = AssetsWallet.load(1)
     assert len(aw) == 1
 
 
 
-@patch.object(AssetsWallet, '_insert')
-@patch.object(AssetsWallet, '_update')
-@patch.object(AssetsWallet, '_delete')
+@patch.object(AssetsWallet, '_insert_assets')
+@patch.object(AssetsWallet, '_update_assets')
+@patch.object(AssetsWallet, '_delete_assets')
 def test_save_insert(mock_delete, mock_update, mock_insert, fill_db):
     aw = AssetsWallet.load(1)
     aw['ADA'] = AssetWalletData(None, Decimal('1.0'), Decimal('2.0'), 'EUR')
@@ -104,9 +104,9 @@ def test_save_insert(mock_delete, mock_update, mock_insert, fill_db):
     mock_delete.assert_not_called()
 
 
-@patch.object(AssetsWallet, '_insert')
-@patch.object(AssetsWallet, '_update')
-@patch.object(AssetsWallet, '_delete')
+@patch.object(AssetsWallet, '_insert_assets')
+@patch.object(AssetsWallet, '_update_assets')
+@patch.object(AssetsWallet, '_delete_assets')
 def test_save_update(mock_delete, mock_update, mock_insert, fill_db):
     aw = AssetsWallet.load(1)
     aw['BTC'].qty = Decimal('12.0')
@@ -115,9 +115,9 @@ def test_save_update(mock_delete, mock_update, mock_insert, fill_db):
     mock_update.assert_called_once()
     mock_delete.assert_not_called()
 
-@patch.object(AssetsWallet, '_insert')
-@patch.object(AssetsWallet, '_update')
-@patch.object(AssetsWallet, '_delete')
+@patch.object(AssetsWallet, '_insert_assets')
+@patch.object(AssetsWallet, '_update_assets')
+@patch.object(AssetsWallet, '_delete_assets')
 def test_save_delete(mock_delete, mock_update, mock_insert, fill_db):
     aw = AssetsWallet.load(1)
     del aw['BTC']
@@ -125,3 +125,10 @@ def test_save_delete(mock_delete, mock_update, mock_insert, fill_db):
     mock_insert.assert_not_called()
     mock_update.assert_not_called()
     mock_delete.assert_called_once()
+
+def test_delete(fill_db):
+    aw = AssetsWallet.load(1)
+    assert aw is not None
+    aw.delete()
+    aw = AssetsWallet.load(1)
+    assert aw is None

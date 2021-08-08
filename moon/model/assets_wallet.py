@@ -12,6 +12,7 @@ SQL_FIND = "select id, asset, qty, pru, currency description from asset_wallet w
 SQL_INSERT = "insert into asset_wallet(id_wallet, asset, qty, pru, currency) values(?, ?, ?, ?, ?)"
 SQL_UPDATE = "update asset_wallet set id_wallet = ?, asset = ?, qty = ?, pru = ?, currency= ? where id = ?"
 SQL_DELETE = "delete from asset_wallet where id = ?"
+SQL_DELETE_ASSETS_WALLET = "delete from asset_wallet where id_wallet = ?"
 
 SQL_COL_ID = 0
 SQL_COL_ASSET = 1
@@ -101,7 +102,7 @@ class AssetsWallet:
         new_asset_keys = set(self.assets_wallet.keys()) - set(assets_wallet_db.assets_wallet.keys())
         new_assets = {k: v for k, v in self.assets_wallet.items() if k in new_asset_keys}
         if new_assets:
-            self._insert(new_assets)
+            self._insert_assets(new_assets)
 
         # get updated assets and update db in batch mode
         common_asset = set(self.assets_wallet.keys()).intersection(set(assets_wallet_db.assets_wallet.keys()))
@@ -110,25 +111,29 @@ class AssetsWallet:
             if self.assets_wallet[asset] != assets_wallet_db[asset]:
                 updated_asset[asset] = self.assets_wallet[asset]
         if updated_asset:
-            self._update(updated_asset)
+            self._update_assets(updated_asset)
 
         # get deleted assets and delete db in batch mode
         deleted_asset_keys = set(set(assets_wallet_db.assets_wallet.keys() - self.assets_wallet.keys()))
         deleted_asset_ids = [data.id for asset, data in assets_wallet_db.items() if asset in
                              deleted_asset_keys]
         if deleted_asset_ids:
-            self._delete(deleted_asset_ids)
+            self._delete_assets(deleted_asset_ids)
 
-    def _insert(self, inserted_assets: dict[str, AssetWalletData]):
+    def _insert_assets(self, inserted_assets: dict[str, AssetWalletData]):
         inserted_assets_list = [(self.id_wallet, asset, float(data.qty), float(data.pru), data.currency)
                                 for asset, data in inserted_assets.items()]
         ConnectionDB.get_cursor().executemany(SQL_INSERT, inserted_assets_list)
 
-    def _update(self, updated_assets: dict[str, AssetWalletData]):
+    def _update_assets(self, updated_assets: dict[str, AssetWalletData]):
         updated_assets_list = [(self.id_wallet, asset, float(data.qty), float(data.pru), data.currency, data.id) for
                                asset, data in updated_assets.items()]
         ConnectionDB.get_cursor().executemany(SQL_UPDATE, updated_assets_list)
 
-    def _delete(self, deleted_assets: list[int]):
+    def _delete_assets(self, deleted_assets: list[int]):
         deleted_assets_list = [(id,) for id in deleted_assets]
         ConnectionDB.get_cursor().executemany(SQL_DELETE, deleted_assets_list)
+
+    def delete(self):
+        ConnectionDB.get_cursor().execute(SQL_DELETE_ASSETS_WALLET, (self.id_wallet,))
+

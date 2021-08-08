@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 SQL_READ_WALLET = "select id, name, description from wallet where id = ?"
-SQL_FIND_WALLET = "select id, name, description from wallet"
+SQL_FIND_WALLET = "select id, name, description from wallet order by id"
 SQL_INSERT_WALLET = "insert into wallet(name, description) values(?, ?)"
 SQL_UPDATE_WALLET = "update wallet set name = ?, description = ? where id = ?"
 SQL_DELETE_WALLET = 'delete from wallet where id = ?'
@@ -37,13 +37,13 @@ class PnlTotal:
 class Wallet:
 
     def __init__(self, id_: Optional[int], name: str, description: str = '', trades: Optional[list[Trade]] = None,
-                 assets: Optional[AssetsWallet] = None,
+                 assets_wallet: Optional[AssetsWallet] = None,
                  pnl: Optional[list[Pnl]] = None, pnl_total: Optional[list[PnlTotal]] = None):
         self.id = id_
         self.name = name
         self.description = description
         self.trades = trades
-        self.assets = assets
+        self.assets_wallet = assets_wallet
         self.pnl = pnl
         self.pnl_total = pnl_total
 
@@ -140,13 +140,20 @@ class Wallet:
         row = ConnectionDB.get_cursor().fetchone()
         if row is None:
             raise EntityNotFoundError(id_)
-        return Wallet(*row)
+        wallet = Wallet(*row)
+        wallet.assets_wallet = AssetsWallet.load(wallet.id)
+        return wallet
 
     @staticmethod
     def find() -> list['Wallet']:
         ConnectionDB.get_cursor().execute(SQL_FIND_WALLET)
         rows = ConnectionDB.get_cursor().fetchall()
-        return [Wallet(*row) for row in rows]
+        wallets = []
+        for row in rows:
+            wallet = Wallet(*row)
+            wallet.assets_wallet = AssetsWallet.load(wallet.id)
+            wallets.append(wallet)
+        return wallets
 
     def save(self) -> None:
         self.validate()
@@ -155,10 +162,13 @@ class Wallet:
             self.id = cur.lastrowid
         else:
             ConnectionDB.get_cursor().execute(SQL_UPDATE_WALLET, (self.name, self.description, self.id))
+        if self.assets_wallet:
+            self.assets_wallet.save()
 
     def delete(self) -> None:
         Wallet.read(self.id)  # type: ignore
         ConnectionDB.get_cursor().execute(SQL_DELETE_WALLET, (self.id,))
+        if self.assets_wallet: self.assets_wallet.delete()
 
     def load_trades(self, pair: str = None, trade_type: TradeType = None, begin_date: datetime = None,
                     end_date: datetime = None, origin: TradeOrigin = None) -> list['Trade']:

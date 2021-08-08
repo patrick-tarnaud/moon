@@ -1,11 +1,12 @@
 import sqlite3
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import patch, Mock, MagicMock
 
 import pytest
 
 from exceptions.exceptions import EntityNotFoundError
+from model.assets_wallet import AssetsWallet, AssetWalletData
 from model.trade import Trade, TradeType, TradeOrigin
 from model.wallet import Wallet
 from db.db import ConnectionDB
@@ -21,10 +22,18 @@ def setup_db():
 
 @pytest.fixture
 def fill_db(setup_db):
-    ConnectionDB.get_cursor().executescript("insert into wallet(name, description) values('wallet1', 'desc1')")
-    ConnectionDB.get_cursor().executescript("insert into wallet(name, description) values('wallet2', 'desc2')")
-    ConnectionDB.get_cursor().executescript("insert into wallet(name, description) values('wallet3', 'desc3')")
-    ConnectionDB.get_cursor().executescript("insert into wallet(name, description) values('wallet4', 'desc4')")
+    ConnectionDB.get_cursor().executescript("insert into wallet(id, name, description) values(1,'wallet1', 'desc1')")
+    ConnectionDB.get_cursor().executescript("insert into wallet(id, name, description) values(2, 'wallet2', 'desc2')")
+    ConnectionDB.get_cursor().executescript("insert into wallet(id, name, description) values(3, 'wallet3', 'desc3')")
+    ConnectionDB.get_cursor().executescript("insert into wallet(id, name, description) values(4, 'wallet4', 'desc4')")
+    ConnectionDB.get_cursor().executescript("insert into asset_wallet(id, id_wallet, asset, qty, pru, "
+                                            "currency) values(1, 1, 'BTC', 12.0, 2.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript("insert into asset_wallet(id, id_wallet, asset, qty, pru, "
+                                            "currency) values(2, 1, 'ADA', 5.0, 2.5, 'EUR')")
+    ConnectionDB.get_cursor().executescript("insert into asset_wallet(id, id_wallet, asset, qty, pru, "
+                                            "currency) values(3, 2, 'BNB', 70.1, 8.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript("insert into asset_wallet(id, id_wallet, asset, qty, pru, "
+                                            "currency) values(4, 2, 'DOT', 100.0, 5.0, 'EUR')")
     ConnectionDB.commit()
 
 
@@ -114,64 +123,85 @@ def test_import_trades(imported_trades):
     assert pnl_total_list[1].currency == 'BTC'
 
 
-def test_find_empty(setup_db):
+@patch.object(AssetsWallet, 'load')
+def test_find_empty(mock_load: Mock, setup_db):
     wallets = Wallet.find()
     assert len(wallets) == 0
+    mock_load.assert_not_called()
 
-
-def test_find(fill_db):
+@patch.object(AssetsWallet, 'load')
+def test_find(mock_load: Mock, fill_db):
     wallets = Wallet.find()
     assert len(wallets) == 4
+    assert mock_load.call_count == 4
 
 
-def test_read(fill_db):
+@patch.object(AssetsWallet, 'load')
+def test_read(mock_load: Mock, fill_db):
     wallet = Wallet.read(1)
     assert wallet.id == 1
     assert wallet.name == 'wallet1'
     assert wallet.description == 'desc1'
+    mock_load.assert_called()
 
     wallet = Wallet.read(4)
     assert wallet.id == 4
     assert wallet.name == 'wallet4'
     assert wallet.description == 'desc4'
+    mock_load.assert_called()
 
-
+@patch.object(AssetsWallet, 'save')
 @patch.object(Wallet, '_is_creation')
 @patch.object(Wallet, 'validate')
-def test_save_for_creation(validate, _is_creation, setup_db):
+def test_save_for_creation(validate, _is_creation, mock_save: Mock, setup_db):
     _is_creation.return_value = True
     validate.return_value = True
     wallet = Wallet(None, 'wallet1', 'description wallet1')
+    wallet.assets_wallet = AssetsWallet(1)
+    wallet.assets_wallet['BTC'] = AssetWalletData()
     wallet.save()
     assert wallet.id is not None
+    mock_save.assert_called_once()
     new_wallet = Wallet.read(1)
     assert new_wallet.id == 1
     assert new_wallet.name == 'wallet1'
     assert new_wallet.description == 'description wallet1'
 
-
+@patch.object(AssetsWallet, 'save')
 @patch.object(Wallet, '_is_creation')
 @patch.object(Wallet, 'validate')
-def test_save_for_update(validate, _is_creation, fill_db):
+def test_save_for_creation_without_assets_wallet(validate, _is_creation, mock_save: Mock, setup_db):
+    _is_creation.return_value = True
+    validate.return_value = True
+    wallet = Wallet(None, 'wallet1', 'description wallet1')
+    wallet.save()
+    assert wallet.id is not None
+    mock_save.assert_not_called()
+    new_wallet = Wallet.read(1)
+    assert new_wallet.id == 1
+    assert new_wallet.name == 'wallet1'
+    assert new_wallet.description == 'description wallet1'
+
+@patch.object(AssetsWallet, 'save')
+@patch.object(Wallet, '_is_creation')
+@patch.object(Wallet, 'validate')
+def test_save_for_update(validate, _is_creation, mock_save: Mock,fill_db):
     _is_creation.return_value = False
     validate.return_value = True
     wallet = Wallet.read(1)
     wallet.description = 'description changed !'
     wallet.save()
+    mock_save.assert_called_once()
     wallet = Wallet.read(1)
     assert wallet.description == 'description changed !'
 
-
-def test_delete(fill_db):
+@patch.object(AssetsWallet, 'delete')
+def test_delete(mock_delete: Mock, fill_db):
     wallet = Wallet.read(1)
     assert Wallet is not None
     wallet.delete()
+    mock_delete.assert_called_once()
     with pytest.raises(EntityNotFoundError):
         Wallet.read(1)
-
-
-def test_delete_not_found(setup_db):
-    with pytest.raises(EntityNotFoundError):
-        wallet = Wallet.read(999)
 
 
