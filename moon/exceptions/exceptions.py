@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Union, Optional
 
 
 class AssetNotFoundError(Exception):
@@ -18,8 +19,13 @@ class Error:
 
 
 class BusinessError(Exception):
-    def __init__(self, errors: list[Error] = None):
-        self.errors = errors if errors is not None else []
+    def __init__(self, errors: Optional[Union[list[Error], Error]] = None):
+        if not errors:
+            self.errors = []
+        elif isinstance(errors, Error):
+            self.errors = [errors]
+        else:
+            self.errors = errors
 
     def add_error(self, error: Error):
         self.errors.append(error)
