@@ -1,15 +1,15 @@
-import sqlite3
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 
 import pytest
 
+from db.db import ConnectionDB
 from exceptions.exceptions import EntityNotFoundError
 from model.assets_wallet import AssetsWallet, AssetWalletData
+from model.pnl import Pnl
 from model.trade import Trade, TradeType, TradeOrigin
 from model.wallet import Wallet
-from db.db import ConnectionDB
 
 
 @pytest.fixture
@@ -129,6 +129,7 @@ def test_find_empty(mock_load: Mock, setup_db):
     assert len(wallets) == 0
     mock_load.assert_not_called()
 
+
 @patch.object(AssetsWallet, 'load')
 def test_find(mock_load: Mock, fill_db):
     wallets = Wallet.find()
@@ -150,6 +151,7 @@ def test_read(mock_load: Mock, fill_db):
     assert wallet.description == 'desc4'
     mock_load.assert_called()
 
+
 @patch.object(AssetsWallet, 'save')
 @patch.object(Wallet, '_is_creation')
 @patch.object(Wallet, 'validate')
@@ -167,6 +169,7 @@ def test_save_for_creation(validate, _is_creation, mock_save: Mock, setup_db):
     assert new_wallet.name == 'wallet1'
     assert new_wallet.description == 'description wallet1'
 
+
 @patch.object(AssetsWallet, 'save')
 @patch.object(Wallet, '_is_creation')
 @patch.object(Wallet, 'validate')
@@ -182,10 +185,11 @@ def test_save_for_creation_without_assets_wallet(validate, _is_creation, mock_sa
     assert new_wallet.name == 'wallet1'
     assert new_wallet.description == 'description wallet1'
 
+
 @patch.object(AssetsWallet, 'save')
 @patch.object(Wallet, '_is_creation')
 @patch.object(Wallet, 'validate')
-def test_save_for_update(validate, _is_creation, mock_save: Mock,fill_db):
+def test_save_for_update(validate, _is_creation, mock_save: Mock, fill_db):
     _is_creation.return_value = False
     validate.return_value = True
     wallet = Wallet.read(1)
@@ -194,6 +198,7 @@ def test_save_for_update(validate, _is_creation, mock_save: Mock,fill_db):
     mock_save.assert_called_once()
     wallet = Wallet.read(1)
     assert wallet.description == 'description changed !'
+
 
 @patch.object(AssetsWallet, 'delete')
 def test_delete(mock_delete: Mock, fill_db):
@@ -205,3 +210,35 @@ def test_delete(mock_delete: Mock, fill_db):
         Wallet.read(1)
 
 
+def test_merge_assets_wallet(fill_db):
+    wallet = Wallet.read(1)
+    new_assets_wallet = AssetsWallet(1)
+    new_assets_wallet['BTC'].qty = Decimal('10.0')
+    new_assets_wallet['BTC'].pru = Decimal('3.0')
+    new_assets_wallet['BTC'].currency = 'EUR'
+    new_assets_wallet['CHZ'].qty = Decimal('9.5')
+    new_assets_wallet['CHZ'].pru = Decimal('1.0')
+    new_assets_wallet['CHZ'].currency = 'EUR'
+    wallet._merge_assets_wallet(new_assets_wallet)
+    assert len(wallet.assets_wallet) == 3
+    assert wallet.assets_wallet['BTC'].qty == Decimal('22')
+    assert wallet.assets_wallet['BTC'].pru == Decimal('2.454545454545454545454545455')
+    assert wallet.assets_wallet['ADA'].qty == Decimal('5')
+    assert wallet.assets_wallet['ADA'].pru == Decimal('2.5')
+    assert wallet.assets_wallet['CHZ'].qty == Decimal('9.5')
+    assert wallet.assets_wallet['CHZ'].pru == Decimal('1.0')
+
+
+@patch.object(Trade, 'find')
+def test_load_trades(mock_find: Mock):
+    mock_find.return_value = []
+    w = Wallet(1, 'wallet1')
+    w.load_trades('BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
+    mock_find.assert_called_with(w.id, 'BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
+
+@patch.object(Pnl, 'find')
+def test_load_pnl(mock_find:Mock):
+    mock_find.return_value = []
+    w = Wallet(1, 'wallet1')
+    w.load_pnl('BTC', datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), 'EUR')
+    mock_find.assert_called_with(w.id, 'BTC', datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), 'EUR')
