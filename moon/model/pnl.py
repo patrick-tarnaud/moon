@@ -99,8 +99,3 @@ class Pnl:
         return self.id is None
 
 
-@dataclass
-class PnlTotal:
-    asset: str
-    value: Decimal
-    currency: str

@@ -1,14 +1,14 @@
 import logging.config
-from dataclasses import dataclass
 from datetime import datetime
 from decimal import *
 from typing import Optional
 
-from exceptions.exceptions import EntityNotFoundError, Error, BusinessError
-from model.pnl import Pnl, PnlTotal
-from model.trade import Trade, TradeType, TradeOrigin
 from db.db import ConnectionDB
+from exceptions.exceptions import EntityNotFoundError, Error, BusinessError
 from model.assets_wallet import AssetWalletData, AssetsWallet
+from model.pnl import Pnl
+from model.pnl_total import PnlTotal
+from model.trade import Trade, TradeType, TradeOrigin
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class Wallet:
                         pnl_total_list[0].value = pnl_total
                     else:
                         pnl_total = pnl
-                        pnl_total_list.append(PnlTotal(asset1, pnl_total, asset2))
+                        pnl_total_list.append(PnlTotal(None, asset1, pnl_total, asset2))
                     assets_wallet[asset1] = AssetWalletData(None, qty,
                                                             assets_wallet[asset1].pru if qty != 0 else Decimal('0.0'),
                                                             asset2)
@@ -121,6 +121,8 @@ class Wallet:
         assets_wallet, pnl, pnl_total = Wallet._import_trades(self.id, new_trades)
         self._merge_assets_wallet(assets_wallet)
         self.assets_wallet.save()
+        self.pnl = pnl
+        Pnl.save_all(self.id, self.pnl)
         self._merge_pnl_total(pnl_total)
         return assets_wallet, pnl, pnl_total
 
@@ -178,7 +180,8 @@ class Wallet:
         self.trades = Trade.find(self.id, *list(locals().values())[1:6])
         return self.trades  # type: ignore
 
-    def load_pnl(self, asset: str = None, begin_date: datetime = None, end_date: datetime = None, currency: str = None) -> \
-    list[Pnl]:
+    def load_pnl(self, asset: str = None, begin_date: datetime = None, end_date: datetime = None,
+                 currency: str = None) -> \
+            list[Pnl]:
         self.pnl = Pnl.find(self.id, *list(locals().values())[1:])
         return self.pnl
