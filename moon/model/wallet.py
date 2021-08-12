@@ -109,11 +109,24 @@ class Wallet:
             else:
                 self.assets_wallet[asset] = assets_data
 
-    def _merge_pnl(self, pnl_list: list[Pnl]):
-        self.pnl = Pnl.find(self.id) + pnl_list
+    @staticmethod
+    def _get_existant_asset(pnl_total_list: list[PnlTotal], asset: str, currency: str) -> Optional[PnlTotal]:
+        for ind, p in enumerate(pnl_total_list):
+            if p.asset == asset and p.currency == currency:
+                return p
+        return None
 
-    def _merge_pnl_total(self, pnl_total: list[PnlTotal]):
-        pass
+    def _get_pnl_total_to_save(self, pnl_total_list: list[PnlTotal]) -> list[PnlTotal]:
+        pnl_total_list_wallet = self.load_pnl_total()
+        pnl_total_list_to_save = []
+        for pnl_total in pnl_total_list:
+            p = self._get_existant_asset(pnl_total_list_wallet, pnl_total.asset, pnl_total.currency)
+            if p:
+                p.value += pnl_total.value
+                pnl_total_list_to_save.append(p)
+            else:
+                pnl_total_list_to_save.append(pnl_total)
+        return pnl_total_list_to_save
 
     def import_trades_from_csv_file(self, filename: str):
         csv_trades = Trade.get_trades_from_csv_file(filename)
@@ -121,10 +134,9 @@ class Wallet:
         assets_wallet, pnl, pnl_total = Wallet._import_trades(self.id, new_trades)
         self._merge_assets_wallet(assets_wallet)
         self.assets_wallet.save()
-        self.pnl = pnl
-        Pnl.save_all(self.id, self.pnl)
-        self._merge_pnl_total(pnl_total)
-        return assets_wallet, pnl, pnl_total
+        Pnl.save_all(self.id, pnl)
+        pnl_total_list_to_save = self._get_pnl_total_to_save(pnl_total)
+        PnlTotal.save_all(self.id, pnl_total_list_to_save)
 
     def _is_creation(self) -> bool:
         return self.id is None
@@ -177,7 +189,7 @@ class Wallet:
 
     def load_trades(self, pair: str = None, trade_type: TradeType = None, begin_date: datetime = None,
                     end_date: datetime = None, origin: TradeOrigin = None) -> list['Trade']:
-        self.trades = Trade.find(self.id, *list(locals().values())[1:6])
+        self.trades = Trade.find(self.id, *list(locals().values())[1:])
         return self.trades  # type: ignore
 
     def load_pnl(self, asset: str = None, begin_date: datetime = None, end_date: datetime = None,
@@ -185,3 +197,7 @@ class Wallet:
             list[Pnl]:
         self.pnl = Pnl.find(self.id, *list(locals().values())[1:])
         return self.pnl
+
+    def load_pnl_total(self, asset: Optional[str] = None):
+        self.pnl_total = PnlTotal.find(self.id, *list(locals().values())[1:])
+        return self.pnl_total

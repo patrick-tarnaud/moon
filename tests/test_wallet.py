@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from pprint import pprint
 from unittest.mock import patch, Mock
 
 import pytest
@@ -8,6 +9,7 @@ from db.db import ConnectionDB
 from exceptions.exceptions import EntityNotFoundError
 from model.assets_wallet import AssetsWallet, AssetWalletData
 from model.pnl import Pnl
+from model.pnl_total import PnlTotal
 from model.trade import Trade, TradeType, TradeOrigin
 from model.wallet import Wallet
 
@@ -34,6 +36,14 @@ def fill_db(setup_db):
                                             "currency) values(3, 2, 'BNB', 70.1, 8.0, 'EUR')")
     ConnectionDB.get_cursor().executescript("insert into asset_wallet(id, id_wallet, asset, qty, pru, "
                                             "currency) values(4, 2, 'DOT', 100.0, 5.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript(
+        "insert into pnl_total(id, id_wallet, asset, value, currency) values(1, 1, 'BTC', 10.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript(
+        "insert into pnl_total(id, id_wallet, asset, value, currency) values(2, 1, 'ADA', -4.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript(
+        "insert into pnl_total(id, id_wallet, asset, value, currency) values(3, 2, 'DOGE', 14.0, 'EUR')")
+    ConnectionDB.get_cursor().executescript(
+        "insert into pnl_total(id, id_wallet, asset, value, currency) values(4, 2, 'DOT', -3.0, 'EUR')")
     ConnectionDB.commit()
 
 
@@ -233,12 +243,104 @@ def test_merge_assets_wallet(fill_db):
 def test_load_trades(mock_find: Mock):
     mock_find.return_value = []
     w = Wallet(1, 'wallet1')
-    w.load_trades('BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
-    mock_find.assert_called_with(w.id, 'BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
+    w.load_trades('BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'),
+                  datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
+    mock_find.assert_called_with(w.id, 'BTC', TradeType.BUY, datetime.fromisoformat('2021-11-07T08:00:00'),
+                                 datetime.fromisoformat('2021-11-08T08:00:00'), TradeOrigin.BINANCE)
+
 
 @patch.object(Pnl, 'find')
-def test_load_pnl(mock_find:Mock):
+def test_load_pnl(mock_find: Mock):
     mock_find.return_value = []
     w = Wallet(1, 'wallet1')
-    w.load_pnl('BTC', datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), 'EUR')
-    mock_find.assert_called_with(w.id, 'BTC', datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'), 'EUR')
+    w.load_pnl('BTC', datetime.fromisoformat('2021-11-07T08:00:00'), datetime.fromisoformat('2021-11-08T08:00:00'),
+               'EUR')
+    mock_find.assert_called_with(w.id, 'BTC', datetime.fromisoformat('2021-11-07T08:00:00'),
+                                 datetime.fromisoformat('2021-11-08T08:00:00'), 'EUR')
+
+
+@patch.object(PnlTotal, 'find')
+def test_load_pnl_total(mock_find: Mock):
+    mock_find.return_value = []
+    w = Wallet(1, 'wallet1')
+    w.load_pnl_total('BTC')
+    mock_find.assert_called_with(w.id, 'BTC')
+
+
+def test_get_existant_asset():
+    pnl_total_list = [
+        PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
+        PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
+        PnlTotal(3, 'BNB', Decimal('-5.0'), 'EUR'),
+        PnlTotal(4, 'CHZ', Decimal('11.0'), 'EUR'),
+        PnlTotal(5, 'ADA', Decimal('-7.0'), 'EUR'),
+    ]
+
+    assert Wallet._get_existant_asset(pnl_total_list, 'BTC', 'EUR') == pnl_total_list[0]
+    assert Wallet._get_existant_asset(pnl_total_list, 'BTC', 'USD') == pnl_total_list[1]
+    assert Wallet._get_existant_asset(pnl_total_list, 'ADA', 'EUR') == pnl_total_list[4]
+    assert Wallet._get_existant_asset(pnl_total_list, 'XXX', 'USD') is None
+
+@patch.object(Wallet,'load_pnl_total')
+def test_get_pnl_total_to_save_positive(mock_load_pnl_total:Mock):
+    mock_load_pnl_total.return_value = [
+        PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
+        PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
+        PnlTotal(3, 'BNB', Decimal('-5.0'), 'EUR'),
+        PnlTotal(4, 'CHZ', Decimal('11.0'), 'EUR'),
+        PnlTotal(5, 'ADA', Decimal('-7.0'), 'EUR'),
+    ]
+    w= Wallet(1, 'wallet1')
+    modified_pnl_total_list = [
+        PnlTotal(1, 'BTC', Decimal('10.0'), 'EUR'),
+    ]
+    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    assert len(res) == 1
+    assert res[0].asset == 'BTC'
+    assert res[0].value == Decimal('22.0')
+
+@patch.object(Wallet, 'load_pnl_total')
+def test_get_pnl_total_to_save_negative(mock_load_pnl_total: Mock):
+    w= Wallet(1, 'wallet1')
+    mock_load_pnl_total.return_value = [
+        PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
+        PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
+        PnlTotal(3, 'BNB', Decimal('-5.0'), 'EUR'),
+        PnlTotal(4, 'CHZ', Decimal('11.0'), 'EUR'),
+        PnlTotal(5, 'ADA', Decimal('-7.0'), 'EUR'),
+    ]
+    modified_pnl_total_list = [
+        PnlTotal(1, 'BTC', Decimal('-20.0'), 'EUR'),
+    ]
+    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    assert len(res) == 1
+    assert res[0].asset == 'BTC'
+    assert res[0].value == Decimal('-8.0')
+
+
+@patch.object(Wallet, 'load_pnl_total')
+def test_get_pnl_total_to_save_multi(mock_load_pnl_total: Mock):
+    w= Wallet(1, 'wallet1')
+    mock_load_pnl_total.return_value = [
+        PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
+        PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
+        PnlTotal(3, 'BNB', Decimal('-5.0'), 'EUR'),
+        PnlTotal(4, 'CHZ', Decimal('11.0'), 'EUR'),
+        PnlTotal(5, 'ADA', Decimal('-7.0'), 'EUR'),
+    ]
+    modified_pnl_total_list = [
+        PnlTotal(1, 'BTC', Decimal('10.0'), 'EUR'),
+        PnlTotal(1, 'BTC', Decimal('8.0'), 'USD'),
+        PnlTotal(5, 'ADA', Decimal('-5.0'), 'EUR'),
+    ]
+    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    assert len(res) == 3
+    assert res[0].asset == 'BTC'
+    assert res[0].currency == 'EUR'
+    assert res[0].value == Decimal('22.0')
+    assert res[1].asset == 'BTC'
+    assert res[1].currency == 'USD'
+    assert res[1].value == Decimal('18.0')
+    assert res[2].asset == 'ADA'
+    assert res[2].currency == 'EUR'
+    assert res[2].value == Decimal('-12.0')
