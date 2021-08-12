@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from exceptions.exceptions import EntityNotFoundError
 
@@ -36,7 +36,7 @@ class PnlTotal:
     @classmethod
     def find(cls, id_wallet: int, asset: Optional[str] = None) -> list['PnlTotal']:
         req = SQL_FIND
-        parameters = [id_wallet]
+        parameters: list[Union[int , str]] = [id_wallet]
         if asset:
             req += 'and asset = ?'
             parameters.append(asset)
@@ -66,7 +66,7 @@ class PnlTotal:
     @staticmethod
     def save_all(id_wallet: int, pnl_total_list: list['PnlTotal']):
         update_list = [pnl_total for pnl_total in pnl_total_list if not pnl_total._is_creation()]
-        parameters = [(id_wallet, pnl_total.asset, float(pnl_total.value), pnl_total.currency, pnl_total.id) for
+        parameters: list[Any] = [(id_wallet, pnl_total.asset, float(pnl_total.value), pnl_total.currency, pnl_total.id) for
                       pnl_total in update_list]
         ConnectionDB.get_cursor().executemany(SQL_UPDATE, parameters)
 

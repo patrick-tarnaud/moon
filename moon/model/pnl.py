@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Union, Any
 
 from db.db import ConnectionDB
 from exceptions.exceptions import EntityNotFoundError
@@ -30,6 +30,7 @@ class Pnl:
         self.id = id_
         self.date = date
         self.asset = asset
+        self.value: Decimal
         if isinstance(value, float):
             self.value = Decimal(str(value))
         else:
@@ -40,7 +41,7 @@ class Pnl:
     def find(id_wallet: int, asset: str = None, begin_date: datetime = None, end_date: datetime = None,
              currency: str = None) -> list['Pnl']:
         req = SQL_FIND
-        parameters = [id_wallet]
+        parameters: list[Any] = [id_wallet]
 
         if asset:
             req += ' and asset = ?'
@@ -85,7 +86,8 @@ class Pnl:
     @staticmethod
     def save_all(id_wallet: int, pnl_list: list['Pnl']):
         update_list = [pnl for pnl in pnl_list if not pnl._is_creation()]
-        parameters = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency, pnl.id) for pnl in update_list]
+        parameters: list[Any] = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency, pnl.id) for pnl in
+                                 update_list]
         ConnectionDB.get_cursor().executemany(SQL_UPDATE, parameters)
 
         insert_list = [pnl for pnl in pnl_list if pnl._is_creation()]
@@ -97,5 +99,3 @@ class Pnl:
 
     def _is_creation(self):
         return self.id is None
-
-
