@@ -1,10 +1,9 @@
+from collections import defaultdict
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional, ItemsView, KeysView, ValuesView
 
 from db.db import ConnectionDB
-from exceptions.exceptions import EntityNotFoundError
-from collections import defaultdict
 
 SQL_READ = "select id, asset, qty, pru, currency from asset_wallet where id = ?"
 SQL_FIND = "select id, asset, qty, pru, currency description from asset_wallet where " \
@@ -41,6 +40,14 @@ class AssetsWallet:
         """
         self.id_wallet = id_wallet
         self.assets_wallet: defaultdict[str, AssetWalletData] = defaultdict(AssetWalletData)
+
+    def __repr__(self):
+        # return f"{self.assets_wallet}"
+        s = "{"
+        for asset, data in self.assets_wallet.items():
+            s += "'" + asset + f"': AssetWalletData(id={data.id}, qty={data.qty}, data.pru={data.pru}, currency='{data.currency}'),"
+        s = s[:-1] + '}'
+        return s
 
     @staticmethod
     def load(id_wallet: int) -> Optional['AssetsWallet']:
@@ -98,27 +105,33 @@ class AssetsWallet:
         """
         # read assets in db
         assets_wallet_db = AssetsWallet.load(self.id_wallet)
-        # get new assets and insert db in batch mode
-        new_asset_keys = set(self.assets_wallet.keys()) - set(assets_wallet_db.assets_wallet.keys())
-        new_assets = {k: v for k, v in self.assets_wallet.items() if k in new_asset_keys}
-        if new_assets:
-            self._insert_assets(new_assets)
 
-        # get updated assets and update db in batch mode
-        common_asset = set(self.assets_wallet.keys()).intersection(set(assets_wallet_db.assets_wallet.keys()))
-        updated_asset = {}
-        for asset in common_asset:
-            if self.assets_wallet[asset] != assets_wallet_db[asset]:
-                updated_asset[asset] = self.assets_wallet[asset]
-        if updated_asset:
-            self._update_assets(updated_asset)
+        # if db contains no assets waller for the wallet : insert all
+        if assets_wallet_db is None :
+            self._insert_assets(self.assets_wallet)
+        else:
+            # db not empty
+            # get new assets and insert db in batch mode
+            new_asset_keys = set(self.assets_wallet.keys()) - set(assets_wallet_db.assets_wallet.keys())
+            new_assets = {k: v for k, v in self.assets_wallet.items() if k in new_asset_keys}
+            if new_assets:
+                self._insert_assets(new_assets)
 
-        # get deleted assets and delete db in batch mode
-        deleted_asset_keys = set(set(assets_wallet_db.assets_wallet.keys() - self.assets_wallet.keys()))
-        deleted_asset_ids = [data.id for asset, data in assets_wallet_db.items() if asset in
-                             deleted_asset_keys]
-        if deleted_asset_ids:
-            self._delete_assets(deleted_asset_ids)
+            # get updated assets and update db in batch mode
+            common_asset = set(self.assets_wallet.keys()).intersection(set(assets_wallet_db.assets_wallet.keys()))
+            updated_asset = {}
+            for asset in common_asset:
+                if self.assets_wallet[asset] != assets_wallet_db[asset]:
+                    updated_asset[asset] = self.assets_wallet[asset]
+            if updated_asset:
+                self._update_assets(updated_asset)
+
+            # get deleted assets and delete db in batch mode
+            deleted_asset_keys = set(set(assets_wallet_db.assets_wallet.keys() - self.assets_wallet.keys()))
+            deleted_asset_ids = [data.id for asset, data in assets_wallet_db.items() if asset in
+                                 deleted_asset_keys]
+            if deleted_asset_ids:
+                self._delete_assets(deleted_asset_ids)
 
     def _insert_assets(self, inserted_assets: dict[str, AssetWalletData]):
         inserted_assets_list = [(self.id_wallet, asset, float(data.qty), float(data.pru), data.currency)

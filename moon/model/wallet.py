@@ -33,6 +33,9 @@ class Wallet:
         self.pnl = pnl
         self.pnl_total = pnl_total
 
+    def __repr__(self):
+        return f"Wallet(id={self.id}, name='{self.name}', description='{self.description}', trades={self.trades!r}, assets_wallet={self.assets_wallet!r}, pnl={self.pnl!r}, pnl_total={self.pnl_total!r})"
+
     @staticmethod
     def _import_trades(id_wallet: int, trades: list[Trade]) -> tuple[AssetsWallet, list[Pnl], list[PnlTotal]]:
         logger.debug('Entry _import_trades')
@@ -65,7 +68,7 @@ class Wallet:
                 elif trade.type == TradeType.SELL:
                     qty = assets_wallet[asset1].qty - trade.qty
                     pnl = trade.total - (trade.qty * assets_wallet[asset1].pru)
-                    pnl_list.append(Pnl(id_wallet, trade.date, asset1, pnl, asset2))
+                    pnl_list.append(Pnl(None, trade.date, asset1, pnl, asset2))
                     pnl_total_item = [e for e in pnl_total_list if e.asset == asset1 and e.currency == asset2]
                     if pnl_total_item:
                         pnl_total = pnl_total_item[0].value + pnl
@@ -94,20 +97,23 @@ class Wallet:
         return assets_wallet, sorted(pnl_list, key=lambda e: e.date), pnl_total_list
 
     def _merge_assets_wallet(self, assets_wallet: AssetsWallet):
-        for asset, assets_data in assets_wallet.items():
-            # if asset already in wallet then calculate new qty ad pru
-            if asset in self.assets_wallet.keys():
-                assert self.assets_wallet[
-                           asset].currency == assets_data.currency, "Il n'est pas possible d'avoir des currency " \
-                                                                    "différents pour un même asset. "
-                new_qty = self.assets_wallet[asset].qty + assets_data.qty
-                new_pru = ((self.assets_wallet[asset].qty * self.assets_wallet[asset].pru) + (assets_data.qty *
-                                                                                              assets_data.pru)) / new_qty
-                self.assets_wallet[asset].qty = new_qty
-                self.assets_wallet[asset].pru = new_pru
-            # else add asset to assets wallet
-            else:
-                self.assets_wallet[asset] = assets_data
+        if self.assets_wallet is None:
+            self.assets_wallet = assets_wallet
+        else:
+            for asset, assets_data in assets_wallet.items():
+                # if asset already in wallet then calculate new qty ad pru
+                if asset in self.assets_wallet.keys():
+                    assert self.assets_wallet[
+                               asset].currency == assets_data.currency, "Il n'est pas possible d'avoir des currency " \
+                                                                        "différents pour un même asset. "
+                    new_qty = self.assets_wallet[asset].qty + assets_data.qty
+                    new_pru = ((self.assets_wallet[asset].qty * self.assets_wallet[asset].pru) + (assets_data.qty *
+                                                                                                  assets_data.pru)) / new_qty
+                    self.assets_wallet[asset].qty = new_qty
+                    self.assets_wallet[asset].pru = new_pru
+                # else add asset to assets wallet
+                else:
+                    self.assets_wallet[asset] = assets_data
 
     @staticmethod
     def _get_existant_asset(pnl_total_list: list[PnlTotal], asset: str, currency: str) -> Optional[PnlTotal]:

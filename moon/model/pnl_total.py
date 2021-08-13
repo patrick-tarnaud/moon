@@ -28,6 +28,9 @@ class PnlTotal:
             self.value = value
         self.currency = currency
 
+    def __repr__(self):
+        return f"PnlTotal(id={self.id}, asset='{self.asset}', value={self.value}, currency='{self.currency}')"
+
     def __eq__(self, other):
         if not isinstance(other, PnlTotal):
             return False

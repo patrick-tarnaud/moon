@@ -37,6 +37,9 @@ class Pnl:
             self.value = value
         self.currency = currency
 
+    def __repr__(self):
+        return f"Pnl(id={self.id!r}, date='{self.date!r}', asset='{self.asset!r}', value={self.value!r}, currency='{self.currency!r}')"
+
     @staticmethod
     def find(id_wallet: int, asset: str = None, begin_date: datetime = None, end_date: datetime = None,
              currency: str = None) -> list['Pnl']:
@@ -86,13 +89,15 @@ class Pnl:
     @staticmethod
     def save_all(id_wallet: int, pnl_list: list['Pnl']):
         update_list = [pnl for pnl in pnl_list if not pnl._is_creation()]
-        parameters: list[Any] = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency, pnl.id) for pnl in
-                                 update_list]
-        ConnectionDB.get_cursor().executemany(SQL_UPDATE, parameters)
+        if update_list:
+            parameters: list[Any] = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency, pnl.id) for pnl in
+                                     update_list]
+            ConnectionDB.get_cursor().executemany(SQL_UPDATE, parameters)
 
         insert_list = [pnl for pnl in pnl_list if pnl._is_creation()]
-        parameters = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency) for pnl in insert_list]
-        ConnectionDB.get_cursor().executemany(SQL_INSERT, parameters)
+        if insert_list:
+            parameters = [(id_wallet, pnl.date, pnl.asset, float(pnl.value), pnl.currency) for pnl in insert_list]
+            ConnectionDB.get_cursor().executemany(SQL_INSERT, parameters)
 
     def delete(self):
         ConnectionDB.get_cursor().execute(SQL_DELETE, (self.id,))

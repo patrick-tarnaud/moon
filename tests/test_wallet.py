@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from pprint import pprint
 from unittest.mock import patch, Mock
 
 import pytest
@@ -12,6 +11,8 @@ from model.pnl import Pnl
 from model.pnl_total import PnlTotal
 from model.trade import Trade, TradeType, TradeOrigin
 from model.wallet import Wallet
+
+import os
 
 
 @pytest.fixture
@@ -87,10 +88,7 @@ def imported_trades():
     ]
 
 
-def test_import_trades(imported_trades):
-    wallet = Wallet(1, 'Binance')
-    assets_dict, pnl_list, pnl_total_list = wallet._import_trades(wallet.id, imported_trades)
-
+def control_import_trades(assets_dict, pnl_list, pnl_total_list):
     # assets dict controls
     assert len(assets_dict) == 3
     assert assets_dict['BTC'] is not None
@@ -132,6 +130,20 @@ def test_import_trades(imported_trades):
     assert pnl_total_list[1].value == 3.125
     assert pnl_total_list[1].currency == 'BTC'
 
+
+def test_import_trades(imported_trades):
+    wallet = Wallet(1, 'Binance')
+    assets_dict, pnl_list, pnl_total_list = wallet._import_trades(wallet.id, imported_trades)
+    control_import_trades(assets_dict, pnl_list, pnl_total_list)
+
+
+def test_import_trades_from_csv_file():
+    wallet = Wallet(1, 'wallet1')
+    filename = os.path.join(os.getcwd(), 'tests/data/trades.csv')
+    wallet.import_trades_from_csv_file(filename)
+    pnl = wallet.load_pnl()
+    pnl_total = wallet.load_pnl_total()
+    control_import_trades(wallet.assets_wallet, pnl, pnl_total)
 
 @patch.object(AssetsWallet, 'load')
 def test_find_empty(mock_load: Mock, setup_db):
@@ -281,8 +293,9 @@ def test_get_existant_asset():
     assert Wallet._get_existant_asset(pnl_total_list, 'ADA', 'EUR') == pnl_total_list[4]
     assert Wallet._get_existant_asset(pnl_total_list, 'XXX', 'USD') is None
 
-@patch.object(Wallet,'load_pnl_total')
-def test_get_pnl_total_to_save_positive(mock_load_pnl_total:Mock):
+
+@patch.object(Wallet, 'load_pnl_total')
+def test_get_pnl_total_to_save_positive(mock_load_pnl_total: Mock):
     mock_load_pnl_total.return_value = [
         PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
         PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
@@ -290,7 +303,7 @@ def test_get_pnl_total_to_save_positive(mock_load_pnl_total:Mock):
         PnlTotal(4, 'CHZ', Decimal('11.0'), 'EUR'),
         PnlTotal(5, 'ADA', Decimal('-7.0'), 'EUR'),
     ]
-    w= Wallet(1, 'wallet1')
+    w = Wallet(1, 'wallet1')
     modified_pnl_total_list = [
         PnlTotal(1, 'BTC', Decimal('10.0'), 'EUR'),
     ]
@@ -299,9 +312,10 @@ def test_get_pnl_total_to_save_positive(mock_load_pnl_total:Mock):
     assert res[0].asset == 'BTC'
     assert res[0].value == Decimal('22.0')
 
+
 @patch.object(Wallet, 'load_pnl_total')
 def test_get_pnl_total_to_save_negative(mock_load_pnl_total: Mock):
-    w= Wallet(1, 'wallet1')
+    w = Wallet(1, 'wallet1')
     mock_load_pnl_total.return_value = [
         PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
         PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
@@ -320,7 +334,7 @@ def test_get_pnl_total_to_save_negative(mock_load_pnl_total: Mock):
 
 @patch.object(Wallet, 'load_pnl_total')
 def test_get_pnl_total_to_save_multi(mock_load_pnl_total: Mock):
-    w= Wallet(1, 'wallet1')
+    w = Wallet(1, 'wallet1')
     mock_load_pnl_total.return_value = [
         PnlTotal(1, 'BTC', Decimal('12.0'), 'EUR'),
         PnlTotal(2, 'BTC', Decimal('10.0'), 'USD'),
