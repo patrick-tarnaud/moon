@@ -1,9 +1,9 @@
 from decimal import Decimal
 from typing import Optional, Union, Any
 
-from exceptions.exceptions import EntityNotFoundError
+from moon.exceptions.exceptions import EntityNotFoundError
 
-from db.db import ConnectionDB
+from moon.db.db import ConnectionDB
 
 SQL_READ = "select id, asset, value, currency from pnl_total where id = ?"
 SQL_FIND = "select id, asset, value, currency from pnl_total where id_wallet = ?"

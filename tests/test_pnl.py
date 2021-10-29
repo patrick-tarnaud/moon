@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from db.db import ConnectionDB
-from model.pnl import Pnl
-from  exceptions.exceptions import EntityNotFoundError
+from moon.db.db import ConnectionDB
+from moon.model.pnl import Pnl
+from moon.exceptions.exceptions import EntityNotFoundError
 
 @pytest.fixture
 def setup_db():

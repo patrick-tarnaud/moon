@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 
-from db.db import ConnectionDB
-from model.assets_wallet import AssetWalletData, AssetsWallet
+from moon.db.db import ConnectionDB
+from moon.model.assets_wallet import AssetWalletData, AssetsWallet
 
 
 @pytest.fixture

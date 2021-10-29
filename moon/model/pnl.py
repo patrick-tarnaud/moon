@@ -3,8 +3,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional, Union, Any
 
-from db.db import ConnectionDB
-from exceptions.exceptions import EntityNotFoundError
+from moon.db.db import ConnectionDB
+from moon.exceptions.exceptions import EntityNotFoundError
 
 SQL_FIND = "select id, id_wallet, date, asset, value, currency from pnl where id_wallet = ?"
 SQL_READ = "select id, id_wallet, date, asset, value, currency from pnl where id = ?"
@@ -20,11 +20,6 @@ COL_CURRENCY = 5
 
 
 class Pnl:
-    # id: int
-    # date: datetime = datetime.now()
-    # asset: str = ''
-    # value: Decimal = Decimal('0.0')
-    # currency: str = 'EUR'
 
     def __init__(self, id_: Optional[int], date: datetime, asset: str, value: Decimal, currency: str):
         self.id = id_

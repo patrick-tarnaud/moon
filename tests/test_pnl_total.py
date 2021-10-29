@@ -1,9 +1,9 @@
 from decimal import Decimal
 from unittest.mock import patch, Mock
 
-from exceptions.exceptions import EntityNotFoundError
-from model.pnl_total import PnlTotal
-from db.db import ConnectionDB
+from moon.exceptions.exceptions import EntityNotFoundError
+from moon.model.pnl_total import PnlTotal
+from moon.db.db import ConnectionDB
 
 import pytest
 

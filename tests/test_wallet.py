@@ -4,13 +4,13 @@ from unittest.mock import patch, Mock
 
 import pytest
 
-from db.db import ConnectionDB
-from exceptions.exceptions import EntityNotFoundError
-from model.assets_wallet import AssetsWallet, AssetWalletData
-from model.pnl import Pnl
-from model.pnl_total import PnlTotal
-from model.trade import Trade, TradeType, TradeOrigin
-from model.wallet import Wallet
+from moon.db.db import ConnectionDB
+from moon.exceptions.exceptions import EntityNotFoundError
+from moon.model.assets_wallet import AssetsWallet, AssetWalletData
+from moon.model.pnl import Pnl
+from moon.model.pnl_total import PnlTotal
+from moon.model.trade import Trade, TradeType, TradeOrigin
+from moon.model.wallet import Wallet
 
 import os
 
@@ -139,7 +139,7 @@ def test_import_trades(imported_trades):
 
 def test_import_trades_from_csv_file():
     wallet = Wallet(1, 'wallet1')
-    filename = os.path.join(os.getcwd(), 'tests/data/trades.csv')
+    filename = os.path.join(os.getcwd(), 'tests/data/trades1.csv')
     wallet.import_trades_from_csv_file(filename)
     pnl = wallet.load_pnl()
     pnl_total = wallet.load_pnl_total()

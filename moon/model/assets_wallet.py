@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Optional, ItemsView, KeysView, ValuesView
 
-from db.db import ConnectionDB
+from moon.db.db import ConnectionDB
 
 SQL_READ = "select id, asset, qty, pru, currency from asset_wallet where id = ?"
 SQL_FIND = "select id, asset, qty, pru, currency description from asset_wallet where " \

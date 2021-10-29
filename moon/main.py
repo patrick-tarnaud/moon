@@ -50,7 +50,7 @@ def main():
     main_window = MainWindow()
     sys.exit(app.exec())
 
-# trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades.csv')
+# trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades1.csv')
 # pprint(trades)
 # print(len(trades))
 # pprint([trade for trade in trades if trade.pair == 'BTCEUR'])

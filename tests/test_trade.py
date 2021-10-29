@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from db.db import ConnectionDB
-from model.trade import Trade, TradeType, TradeOrigin
-from exceptions.exceptions import BusinessError, Error
+from moon.db.db import ConnectionDB
+from moon.model.trade import Trade, TradeType, TradeOrigin
+from moon.exceptions.exceptions import BusinessError, Error
 
 NB_TRADES = 9
 NB_BUY_TRADES = 6
@@ -16,7 +16,7 @@ NB_ETHEUR_TRADES = 2
 NB_BNB_TRADES = 3
 NB_PAIRS = 4
 
-# CSV_FILENAME = 'binance-export-trades.csv'
+# CSV_FILENAME = 'binance-export-trades1.csv'
 NB_TRADES_IN_CSV = 7
 
 

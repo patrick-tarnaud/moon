@@ -5,8 +5,8 @@ from enum import Enum
 from typing import Union, Any, Optional
 import logging.config
 
-from exceptions.exceptions import EntityNotFoundError, BusinessError, Error
-from db.db import ConnectionDB
+from moon.exceptions.exceptions import EntityNotFoundError, BusinessError, Error
+from moon.db.db import ConnectionDB
 
 logger = logging.getLogger(__name__)
 
@@ -354,7 +354,7 @@ class Trade:
         """
         Read trades from csv file (with ';' delimiter) and return them
 
-        :param filename: filename of the csv file with path (ie /home/patrick/Documents/Finances/binance-export-trades.csv)
+        :param filename: filename of the csv file with path (ie /home/patrick/Documents/Finances/binance-export-trades1.csv)
         :returns: a list of Trades
         :raises FileNotFoundError: if the file doesn't exist
         """

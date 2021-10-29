@@ -1,16 +1,17 @@
 import logging.config
 from datetime import datetime
 from decimal import *
-from typing import Optional
+from typing import Optional, cast
+import sys
 
-from db.db import ConnectionDB
-from exceptions.exceptions import EntityNotFoundError, Error, BusinessError
-from model.assets_wallet import AssetWalletData, AssetsWallet
-from model.pnl import Pnl
-from model.pnl_total import PnlTotal
-from model.trade import Trade, TradeType, TradeOrigin
+from moon.db.db import ConnectionDB
+from moon.exceptions.exceptions import EntityNotFoundError, Error, BusinessError
+from moon.model.assets_wallet import AssetWalletData, AssetsWallet
+from moon.model.pnl import Pnl
+from moon.model.pnl_total import PnlTotal
+from moon.model.trade import Trade, TradeType, TradeOrigin
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 SQL_READ_WALLET = "select id, name, description from wallet where id = ?"
@@ -70,9 +71,9 @@ class Wallet:
                     pnl = trade.total - (trade.qty * assets_wallet[asset1].pru)
                     pnl_list.append(Pnl(None, trade.date, asset1, pnl, asset2))
                     pnl_total_item = [e for e in pnl_total_list if e.asset == asset1 and e.currency == asset2]
-                    if pnl_total_item:
+                    if len(pnl_total_item) == 1:
                         pnl_total = pnl_total_item[0].value + pnl
-                        pnl_total_list[0].value = pnl_total
+                        pnl_total_item[0].value = pnl_total
                     else:
                         pnl_total = pnl
                         pnl_total_list.append(PnlTotal(None, asset1, pnl_total, asset2))
@@ -94,7 +95,10 @@ class Wallet:
                                                            assets_wallet[fee_asset].currency)
                 logger.debug(f"assets_wallet[{fee_asset}] : {assets_wallet[fee_asset]}")
 
-        return assets_wallet, sorted(pnl_list, key=lambda e: e.date), pnl_total_list
+        # suppress asset with qty == 0c
+        new_assets_wallet = cast(AssetsWallet, { asset:data for asset, data in assets_wallet.items() if data.qty > 0})
+
+        return new_assets_wallet, sorted(pnl_list, key=lambda x: x.date), sorted(pnl_total_list, key=lambda x: x.asset)
 
     def _merge_assets_wallet(self, assets_wallet: AssetsWallet):
         if self.assets_wallet is None:
@@ -143,6 +147,25 @@ class Wallet:
         Pnl.save_all(self.id, pnl)
         pnl_total_list_to_save = self._get_pnl_total_to_save(pnl_total)
         PnlTotal.save_all(self.id, pnl_total_list_to_save)
+
+    def export_wallet_to_csv_files(self, filename: str):
+        csv_trades = Trade.get_trades_from_csv_file(filename)
+        assets_wallet, pnl, pnl_total = Wallet._import_trades(self.id, csv_trades)
+
+        with open('assets_wallet.csv','w') as f:
+            f.write("asset;qty;pru;investi\n")
+            for asset, data in sorted(assets_wallet.items()):
+                f.write(f"{asset};{round(data.qty,6)};{round(data.pru,6)};{round(data.qty*data.pru,6)}\n")
+
+        with open('pnl.csv','w') as f:
+            f.write("date;asset;gain/perte;monnaie\n")
+            for p in pnl:
+                f.write(f"{p.date};{p.asset};{round(p.value,2)};{p.currency}\n")
+
+        with open('pnl_total.csv','w') as f:
+            f.write("asset;gain/perte;monnaie\n")
+            for p in pnl_total:
+                f.write(f"{p.asset};{round(p.value)};{p.currency}\n")
 
     def _is_creation(self) -> bool:
         return self.id is None
@@ -207,3 +230,7 @@ class Wallet:
     def load_pnl_total(self, asset: Optional[str] = None):
         self.pnl_total = PnlTotal.find(self.id, *list(locals().values())[1:])
         return self.pnl_total
+
+if __name__ == '__main__':
+    w = Wallet(None, 'd')
+    w.export_wallet_to_csv_files(sys.argv[1])
