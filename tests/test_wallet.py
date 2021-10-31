@@ -48,44 +48,44 @@ def fill_db(setup_db):
     ConnectionDB.commit()
 
 
-@pytest.fixture()
-def imported_trades():
-    return [
-        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('2'), Decimal('1000'), Decimal('2000'),
-              datetime.strptime('2020-06-01 14:00:01', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('3'), Decimal('500'), Decimal('1500'),
-              datetime.strptime('2020-06-01 14:00:02', '%Y-%m-%d %H:%M:%S'),
-              Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('750'), Decimal('1500'),
-              datetime.strptime('2020-06-01 14:00:03', '%Y-%m-%d %H:%M:%S'),
-              Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('800'), Decimal('1600'),
-              datetime.strptime('2020-06-01 14:00:04', '%Y-%m-%d %H:%M:%S'),
-              Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('10'), Decimal('900'), Decimal('9000'),
-              datetime.strptime('2020-06-01 14:00:05', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.SELL, Decimal('11'), Decimal('500'), Decimal('5500'),
-              datetime.strptime('2020-06-01 14:00:06', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BTCEUR', TradeType.BUY, Decimal('5'), Decimal('1000'), Decimal('5000'),
-              datetime.strptime('2020-06-01 14:00:07', '%Y-%m-%d %H:%M:%S'),
-              Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.25'), Decimal('1.25'),
-              datetime.strptime('2020-06-01 14:00:08', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.5'), Decimal('2.5'),
-              datetime.strptime('2020-06-01 14:00:09', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-        Trade(None, 'BNBBTC', TradeType.SELL, Decimal('5'), Decimal('1'), Decimal('5'),
-              datetime.strptime('2020-06-01 14:00:10', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
-              'EUR', '', TradeOrigin.BINANCE),
-    ]
+# @pytest.fixture()
+# def imported_trades():
+#     return [
+#         Trade(None, 'BTCEUR', TradeType.BUY, Decimal('2'), Decimal('1000'), Decimal('2000'),
+#               datetime.strptime('2020-06-01 14:00:01', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.BUY, Decimal('3'), Decimal('500'), Decimal('1500'),
+#               datetime.strptime('2020-06-01 14:00:02', '%Y-%m-%d %H:%M:%S'),
+#               Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('750'), Decimal('1500'),
+#               datetime.strptime('2020-06-01 14:00:03', '%Y-%m-%d %H:%M:%S'),
+#               Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.SELL, Decimal('2'), Decimal('800'), Decimal('1600'),
+#               datetime.strptime('2020-06-01 14:00:04', '%Y-%m-%d %H:%M:%S'),
+#               Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.BUY, Decimal('10'), Decimal('900'), Decimal('9000'),
+#               datetime.strptime('2020-06-01 14:00:05', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.SELL, Decimal('11'), Decimal('500'), Decimal('5500'),
+#               datetime.strptime('2020-06-01 14:00:06', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BTCEUR', TradeType.BUY, Decimal('5'), Decimal('1000'), Decimal('5000'),
+#               datetime.strptime('2020-06-01 14:00:07', '%Y-%m-%d %H:%M:%S'),
+#               Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.25'), Decimal('1.25'),
+#               datetime.strptime('2020-06-01 14:00:08', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BNBBTC', TradeType.BUY, Decimal('5'), Decimal('0.5'), Decimal('2.5'),
+#               datetime.strptime('2020-06-01 14:00:09', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#         Trade(None, 'BNBBTC', TradeType.SELL, Decimal('5'), Decimal('1'), Decimal('5'),
+#               datetime.strptime('2020-06-01 14:00:10', '%Y-%m-%d %H:%M:%S'), Decimal('0'),
+#               'EUR', '', TradeOrigin.BINANCE),
+#     ]
 
 
 def control_import_trades(assets_dict, pnl_list, pnl_total_list):
@@ -123,21 +123,26 @@ def control_import_trades(assets_dict, pnl_list, pnl_total_list):
 
     # pnl total list controls
     assert len(pnl_total_list) == 2
-    assert pnl_total_list[0].asset == 'BTC'
-    assert pnl_total_list[0].value == -3900
-    assert pnl_total_list[0].currency == 'EUR'
-    assert pnl_total_list[1].asset == 'BNB'
-    assert pnl_total_list[1].value == 3.125
-    assert pnl_total_list[1].currency == 'BTC'
+    assert pnl_total_list[0].asset == 'BNB'
+    assert pnl_total_list[0].value == 3.125
+    assert pnl_total_list[0].currency == 'BTC'
+    assert pnl_total_list[1].asset == 'BTC'
+    assert pnl_total_list[1].value == -3900
+    assert pnl_total_list[1].currency == 'EUR'
 
 
-def test_import_trades(imported_trades):
-    wallet = Wallet(1, 'Binance')
-    assets_dict, pnl_list, pnl_total_list = wallet._import_trades(wallet.id, imported_trades)
-    control_import_trades(assets_dict, pnl_list, pnl_total_list)
+# def test_import_trades():
+#     wallet = Wallet(1, 'Binance')
+#     assets_dict, pnl_list, pnl_total_list = wallet._import_trades(wallet.id, imported_trades)
+#     control_import_trades(assets_dict, pnl_list, pnl_total_list)
 
+def test_import_trades_from_csv_file_no_db():
+    filename = os.path.join(os.getcwd(), 'tests/data/trades1.csv')
+    csv_trades = Trade.get_trades_from_csv_file(filename)
+    assets_wallet, pnl, pnl_total = Wallet._import_trades(1,csv_trades)
+    control_import_trades(assets_wallet, pnl, pnl_total)
 
-def test_import_trades_from_csv_file():
+def test_import_trades_from_csv_file_with_db():
     wallet = Wallet(1, 'wallet1')
     filename = os.path.join(os.getcwd(), 'tests/data/trades1.csv')
     wallet.import_trades_from_csv_file(filename)

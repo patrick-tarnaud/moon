@@ -71,7 +71,7 @@ class Wallet:
                     pnl = trade.total - (trade.qty * assets_wallet[asset1].pru)
                     pnl_list.append(Pnl(None, trade.date, asset1, pnl, asset2))
                     pnl_total_item = [e for e in pnl_total_list if e.asset == asset1 and e.currency == asset2]
-                    if len(pnl_total_item) == 1:
+                    if pnl_total_item:
                         pnl_total = pnl_total_item[0].value + pnl
                         pnl_total_item[0].value = pnl_total
                     else:
@@ -95,8 +95,8 @@ class Wallet:
                                                            assets_wallet[fee_asset].currency)
                 logger.debug(f"assets_wallet[{fee_asset}] : {assets_wallet[fee_asset]}")
 
-        # suppress asset with qty == 0c
-        new_assets_wallet = cast(AssetsWallet, { asset:data for asset, data in assets_wallet.items() if data.qty > 0})
+        # suppress asset with qty == 0
+        new_assets_wallet = AssetsWallet(id_wallet, { asset:data for asset, data in assets_wallet.items() if data.qty != 0})
 
         return new_assets_wallet, sorted(pnl_list, key=lambda x: x.date), sorted(pnl_total_list, key=lambda x: x.asset)
 

@@ -33,13 +33,17 @@ class AssetsWallet:
     Manage assets of a wallet
     """
 
-    def __init__(self, id_wallet: int):
+    def __init__(self, id_wallet: int, dict_asset: Optional[dict[str,AssetWalletData]] = None):
         """
         AssetsWallet constructor
         :param id_wallet: wallet id
         """
         self.id_wallet = id_wallet
-        self.assets_wallet: defaultdict[str, AssetWalletData] = defaultdict(AssetWalletData)
+        self.assets_wallet: defaultdict[str, AssetWalletData]
+        if dict_asset:
+            self.assets_wallet = defaultdict(AssetWalletData, dict_asset)
+        else:
+            self.assets_wallet = defaultdict(AssetWalletData)
 
     def __repr__(self):
         # return f"{self.assets_wallet}"
