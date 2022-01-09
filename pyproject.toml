@@ -2,7 +2,7 @@
 name = "moon"
 version = "0.1.0"
 description = ""
-authors = ["Patrick Tarnaud <patrick.tarnaud@mail.com>"]
+authors = ["Patrick Tarnaud <patrick.tarnaud@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.10"

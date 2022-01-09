@@ -33,7 +33,32 @@ class Pnl:
         self.currency = currency
 
     def __repr__(self):
-        return f"Pnl(id={self.id!r}, date='{self.date!r}', asset='{self.asset!r}', value={self.value!r}, currency='{self.currency!r}')"
+        return f"Pnl(id={self.id}, date='{self.date}', asset='{self.asset}', value={self.value}, currency='{self.currency}')"
+
+    def __eq__(self, other):
+        if not isinstance(other, Pnl):
+            return False
+        return self.date == other.date and self.asset == other.asset and self.value == other.value and self.currency == other.currency
+
+    def __lt__(self, other):
+        # if self.date < other.date:
+        #     return True
+        # elif self.date > other.date:
+        #     return False
+        # if self.asset < other.asset:
+        #     return True
+        # elif self.asset > other.asset:
+        #     return False
+        # if self.value < other.value:
+        #     return True
+        # elif self.value > other.value:
+        #     return False
+        # if self.currency < other.currency:
+        #     return True
+        # elif self.currency > other.currency:
+        #     return False
+        # return False
+        return self.date < other.date or self.asset == other.asset or self.value == other.value or self.currency == other.currency
 
     @staticmethod
     def find(id_wallet: int, asset: str = None, begin_date: datetime = None, end_date: datetime = None,
@@ -99,3 +124,17 @@ class Pnl:
 
     def _is_creation(self):
         return self.id is None
+
+    @classmethod
+    def load_from_csv_file(cls, filename: str) -> list['Pnl']:
+        pnl_list: list[Pnl] = []
+        with open(filename, 'r') as f:
+            for num, line in enumerate(f):
+                # skip header
+                if num > 0:
+                    pnl = line.split(';')
+                    # pnl[3][:-1] to skip \n
+                    pnl_list.append(
+                        cls(None, datetime.strptime(pnl[0], '%Y-%m-%d %H:%M:%S'), pnl[1], Decimal(pnl[2]), pnl[3][:-1]))
+
+        return pnl_list

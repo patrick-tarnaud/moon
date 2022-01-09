@@ -126,7 +126,7 @@ class Wallet:
                 return p
         return None
 
-    def _get_pnl_total_to_save(self, pnl_total_list: list[PnlTotal]) -> list[PnlTotal]:
+    def _merge_pnl_total(self, pnl_total_list: list[PnlTotal]) -> list[PnlTotal]:
         pnl_total_list_wallet = self.load_pnl_total()
         pnl_total_list_to_save = []
         for pnl_total in pnl_total_list:
@@ -145,7 +145,7 @@ class Wallet:
         self._merge_assets_wallet(assets_wallet)
         self.assets_wallet.save()
         Pnl.save_all(self.id, pnl)
-        pnl_total_list_to_save = self._get_pnl_total_to_save(pnl_total)
+        pnl_total_list_to_save = self._merge_pnl_total(pnl_total)
         PnlTotal.save_all(self.id, pnl_total_list_to_save)
 
     def export_wallet_to_csv_files(self, filename: str):
@@ -160,12 +160,12 @@ class Wallet:
         with open('pnl.csv','w') as f:
             f.write("date;asset;gain/perte;monnaie\n")
             for p in pnl:
-                f.write(f"{p.date};{p.asset};{round(p.value,2)};{p.currency}\n")
+                f.write(f"{p.date};{p.asset};{round(p.value,6)};{p.currency}\n")
 
         with open('pnl_total.csv','w') as f:
             f.write("asset;gain/perte;monnaie\n")
             for p in pnl_total:
-                f.write(f"{p.asset};{round(p.value)};{p.currency}\n")
+                f.write(f"{p.asset};{round(p.value,6)};{p.currency}\n")
 
     def _is_creation(self) -> bool:
         return self.id is None
@@ -232,5 +232,6 @@ class Wallet:
         return self.pnl_total
 
 if __name__ == '__main__':
+    # in exports dir in terminal : python ./../moon/model/wallet.py /home/patrick/Documents/Finances/Binance-export-trades.csv
     w = Wallet(None, 'd')
     w.export_wallet_to_csv_files(sys.argv[1])

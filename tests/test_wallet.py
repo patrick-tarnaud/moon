@@ -88,6 +88,10 @@ def fill_db(setup_db):
 #     ]
 
 
+def control_import_trades_from_datatest():
+    pass
+
+
 def control_import_trades(assets_dict, pnl_list, pnl_total_list):
     # assets dict controls
     assert len(assets_dict) == 3
@@ -312,7 +316,7 @@ def test_get_pnl_total_to_save_positive(mock_load_pnl_total: Mock):
     modified_pnl_total_list = [
         PnlTotal(1, 'BTC', Decimal('10.0'), 'EUR'),
     ]
-    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    res = w._merge_pnl_total(modified_pnl_total_list)
     assert len(res) == 1
     assert res[0].asset == 'BTC'
     assert res[0].value == Decimal('22.0')
@@ -331,7 +335,7 @@ def test_get_pnl_total_to_save_negative(mock_load_pnl_total: Mock):
     modified_pnl_total_list = [
         PnlTotal(1, 'BTC', Decimal('-20.0'), 'EUR'),
     ]
-    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    res = w._merge_pnl_total(modified_pnl_total_list)
     assert len(res) == 1
     assert res[0].asset == 'BTC'
     assert res[0].value == Decimal('-8.0')
@@ -352,7 +356,7 @@ def test_get_pnl_total_to_save_multi(mock_load_pnl_total: Mock):
         PnlTotal(1, 'BTC', Decimal('8.0'), 'USD'),
         PnlTotal(5, 'ADA', Decimal('-5.0'), 'EUR'),
     ]
-    res = w._get_pnl_total_to_save(modified_pnl_total_list)
+    res = w._merge_pnl_total(modified_pnl_total_list)
     assert len(res) == 3
     assert res[0].asset == 'BTC'
     assert res[0].currency == 'EUR'

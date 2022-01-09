@@ -61,7 +61,7 @@ BINANCE_CSV_INDEX_FEE_ASSET = 7
 # CURRENCY_LIST = ('EUR', 'USDT')
 ASSET_LIST = (
     'BTC', 'ETH', 'BNB', 'HOT', 'SXP', 'DOT', 'ADA', 'CHZ', 'SOL', 'FIL', 'EGLD', 'CAKE', 'EOS', 'PERL', 'UNI', 'XLM',
-    'MANA', 'XRP', 'AVAX', 'HNT', 'DOGE', 'BTT', 'INJ', 'KAVA', 'LTC', 'LINK', 'EUR', 'USDT')
+    'MANA', 'XRP', 'AVAX', 'HNT', 'DOGE', 'BTT', 'INJ', 'KAVA', 'LTC', 'LINK', 'EUR', 'USDT', 'WIN')
 
 
 class Trade:

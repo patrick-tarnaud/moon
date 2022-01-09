@@ -109,3 +109,17 @@ def test_delete(fill_db):
     with pytest.raises(EntityNotFoundError):
         pnl = Pnl.read(3)
 
+def test_lt():
+    pnl1 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('12.0'), 'EUR')
+    pnl2 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('12.0'), 'EUR')
+    assert not pnl1 < pnl2
+    assert not pnl2 < pnl1
+    pnl1 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('12.0'), 'EUR')
+    pnl2 = Pnl(1, datetime.fromisoformat('2021-02-17T07:00:00'), 'BTC', Decimal('12.0'), 'EUR')
+    assert pnl2 < pnl1
+    pnl1 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('12.0'), 'EUR')
+    pnl2 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('11.0'), 'EUR')
+    assert pnl2 < pnl1
+    pnl1 = Pnl(1, datetime.fromisoformat('2021-02-17T07:00:00'), 'BTC', Decimal('15.0'), 'EUR')
+    pnl2 = Pnl(1, datetime.fromisoformat('2021-02-17T08:00:00'), 'BTC', Decimal('11.0'), 'EUR')
+    assert pnl1 < pnl2
