@@ -30,6 +30,7 @@ class MainWindow(QMainWindow):
 
         self.show()
 
+        # asset dashboard init from csv
         csv_trades = Trade.get_trades_from_csv_file(
             "/home/patrick/Documents/Finances/Binance-export-trades.csv")
         assets_wallet, pnl, pnl_total = Wallet._import_trades(0, csv_trades)
