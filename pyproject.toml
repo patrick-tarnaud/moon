@@ -13,6 +13,7 @@ dateutils = "^0.6.12"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 mypy = "^0.910"
+autopep8 = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -25,6 +26,14 @@ log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(linen
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.mypy]
-mypy_path='./src'
-ignore_missing_imports = true
-strict_optional = false
+disallow_untyped_defs = true
+disallow_any_unimported = true
+# ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = true
+
+[tool.black]
+line-length = 120

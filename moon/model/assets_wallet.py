@@ -33,7 +33,7 @@ class AssetsWallet:
     Manage assets of a wallet
     """
 
-    def __init__(self, id_wallet: int, dict_asset: Optional[dict[str,AssetWalletData]] = None):
+    def __init__(self, id_wallet: int, dict_asset: Optional[dict[str, AssetWalletData]] = None):
         """
         AssetsWallet constructor
         :param id_wallet: wallet id
@@ -49,7 +49,8 @@ class AssetsWallet:
         # return f"{self.assets_wallet}"
         s = "{"
         for asset, data in self.assets_wallet.items():
-            s += "'" + asset + f"': AssetWalletData(id={data.id}, qty={data.qty}, data.pru={data.pru}, currency='{data.currency}'),"
+            s += "'" + asset + \
+                f"': AssetWalletData(id={data.id}, qty={data.qty}, data.pru={data.pru}, currency='{data.currency}'),"
         s = s[:-1] + '}'
         return s
 
@@ -66,8 +67,10 @@ class AssetsWallet:
         aw.assets_wallet = defaultdict(AssetWalletData)
         for row in rows:
             aw.assets_wallet[row[SQL_COL_ASSET]] = AssetWalletData(row[SQL_COL_ID],
-                                                                   Decimal(str(row[SQL_COL_QTY])),
-                                                                   Decimal(str(row[SQL_COL_PRU])),
+                                                                   Decimal(
+                                                                       str(row[SQL_COL_QTY])),
+                                                                   Decimal(
+                                                                       str(row[SQL_COL_PRU])),
                                                                    row[SQL_COL_CURRENCY])
         return None if not aw else aw
 
@@ -111,18 +114,21 @@ class AssetsWallet:
         assets_wallet_db = AssetsWallet.load(self.id_wallet)
 
         # if db contains no assets waller for the wallet : insert all
-        if assets_wallet_db is None :
+        if assets_wallet_db is None:
             self._insert_assets(self.assets_wallet)
         else:
             # db not empty
             # get new assets and insert db in batch mode
-            new_asset_keys = set(self.assets_wallet.keys()) - set(assets_wallet_db.assets_wallet.keys())
-            new_assets = {k: v for k, v in self.assets_wallet.items() if k in new_asset_keys}
+            new_asset_keys = set(self.assets_wallet.keys()) - \
+                set(assets_wallet_db.assets_wallet.keys())
+            new_assets = {
+                k: v for k, v in self.assets_wallet.items() if k in new_asset_keys}
             if new_assets:
                 self._insert_assets(new_assets)
 
             # get updated assets and update db in batch mode
-            common_asset = set(self.assets_wallet.keys()).intersection(set(assets_wallet_db.assets_wallet.keys()))
+            common_asset = set(self.assets_wallet.keys()).intersection(
+                set(assets_wallet_db.assets_wallet.keys()))
             updated_asset = {}
             for asset in common_asset:
                 if self.assets_wallet[asset] != assets_wallet_db[asset]:
@@ -131,7 +137,8 @@ class AssetsWallet:
                 self._update_assets(updated_asset)
 
             # get deleted assets and delete db in batch mode
-            deleted_asset_keys = set(set(assets_wallet_db.assets_wallet.keys() - self.assets_wallet.keys()))
+            deleted_asset_keys = set(
+                set(assets_wallet_db.assets_wallet.keys() - self.assets_wallet.keys()))
             deleted_asset_ids = [data.id for asset, data in assets_wallet_db.items() if asset in
                                  deleted_asset_keys]
             if deleted_asset_ids:
@@ -153,4 +160,3 @@ class AssetsWallet:
 
     def delete(self):
         ConnectionDB.get_cursor().execute(SQL_DELETE_ASSETS_WALLET, (self.id_wallet,))
-

@@ -2,15 +2,35 @@ import datetime
 
 import PySide6.QtCore as QtCore
 import dateutils
-from PySide6.QtWidgets import QWidget, QTableWidget, QVBoxLayout, QTableWidgetItem, QHBoxLayout, QLineEdit, QLabel, \
-    QComboBox, QDateEdit, QGroupBox, QPushButton
+from PySide6.QtWidgets import (
+    QWidget,
+    QTableWidget,
+    QVBoxLayout,
+    QTableWidgetItem,
+    QHBoxLayout,
+    QLineEdit,
+    QLabel,
+    QComboBox,
+    QDateEdit,
+    QGroupBox,
+    QPushButton,
+)
 from babel.numbers import format_decimal
+from moon.model.trade import Trade, TradeType
 
-import utils.utils as utils
-from model.trade import Trade, TradeType
-
-TRADE_COL_LABELS = ['Id', 'Pair', 'Type', 'Quantité', 'Prix', 'Total', 'Date', 'Taxe', 'Taxe devise', 'Id origine',
-                    'Origine']
+TRADE_COL_LABELS = [
+    "Id",
+    "Pair",
+    "Type",
+    "Quantité",
+    "Prix",
+    "Total",
+    "Date",
+    "Taxe",
+    "Taxe devise",
+    "Id origine",
+    "Origine",
+]
 TRADE_COL_ID = 0
 TRADE_COL_PAIR = 1
 TRADE_COL_TYPE = 2
@@ -32,26 +52,28 @@ class TradesWindow(QWidget):
 
     def init_ui(self):
         # search criteria
-        self.pair_label = QLabel('Pair :')
+        self.pair_label = QLabel("Pair :")
         self.pair = QComboBox()
         self.pair.setEditable(True)
-        self.pair.addItem('')
+        self.pair.addItem("")
         for pair in TradeDB.get_trade_db().get_pairs():
             self.pair.addItem(pair)
 
-        self.type_label = QLabel('Type :')
+        self.type_label = QLabel("Type :")
         self.type = QComboBox()
-        self.type.addItem('')
-        self.type.addItem('BUY', TradeType.BUY)
-        self.type.addItem('SELL', TradeType.SELL)
+        self.type.addItem("")
+        self.type.addItem("BUY", TradeType.BUY)
+        self.type.addItem("SELL", TradeType.SELL)
 
-        self.begin_date_label = QLabel('Date de début')
-        self.begin_date = QDateEdit(datetime.date.today() - dateutils.relativedelta(months=3))
+        self.begin_date_label = QLabel("Date de début")
+        self.begin_date = QDateEdit(
+            datetime.date.today() - dateutils.relativedelta(months=3)
+        )
 
-        self.end_date_label = QLabel('Date de fin')
+        self.end_date_label = QLabel("Date de fin")
         self.end_date = QDateEdit(datetime.date.today())
 
-        self.search_button = QPushButton('&Chercher')
+        self.search_button = QPushButton("&Chercher")
         self.search_button.setDefault(True)
         self.search_button.clicked.connect(self.search_trades)
 
@@ -68,7 +90,7 @@ class TradesWindow(QWidget):
         self.setLayout(v_layout)
 
         criteria_layout = QHBoxLayout(self)
-        criteria_group_box = QGroupBox('Critères de recherche  ')
+        criteria_group_box = QGroupBox("Critères de recherche  ")
         criteria_group_box.setLayout(criteria_layout)
 
         criteria_layout.addWidget(self.pair_label)
@@ -85,18 +107,24 @@ class TradesWindow(QWidget):
         v_layout.addWidget(self.trades_table)
 
     def item_clicked(self, item):
-        print('item_clicked')
+        print("item_clicked")
         print(str(item))
 
     def cell_clicked(self, row, col):
-        print('cell_clicked')
+        print("cell_clicked")
         print(row, col)
 
     def search_trades(self) -> None:
         trade_db = TradeDB.get_trade_db()
-        trades = trade_db.find(self.pair.currentText(), self.type.itemData(self.type.currentIndex()),
-                               utils.convert_date_to_datetime(self.begin_date.date().toPython(), "00:00:00"),
-                               utils.convert_date_to_datetime(self.end_date.date().toPython(), "23:59:59"))
+        trades = trade_db.find(
+            self.pair.currentText(),
+            self.type.itemData(self.type.currentIndex()),
+            utils.convert_date_to_datetime(
+                self.begin_date.date().toPython(), "00:00:00"
+            ),
+            utils.convert_date_to_datetime(self.end_date.date().toPython(), "23:59:59"),
+            
+        )
         self.trades_table.clearContents()
         self.trades_table.setRowCount(len(trades))
         row = 0

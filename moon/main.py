@@ -2,13 +2,37 @@
 import sys
 from PySide6.QtWidgets import QApplication
 
-from ui.main_window import MainWindow
+from moon.ui.main_window import MainWindow
 
 # api_key and api_secret for Binance API in env
 # client = Client(os.environ['api_key'], os.environ['api_secret'])
 
-pairs = {'ADAEUR', 'BNBEUR', 'BTCEUR', 'BTTEUR', 'CAKEUSDT', 'CHZEUR', 'DOGEEUR', 'DOTEUR', 'EGLDEUR', 'EOSEUR',
-         'ETHEUR', 'FILUSDT', 'HNTUSDT', 'HOTUSDT', 'HOTEUR', 'SOLUSDT', 'SXPEUR', 'UNIEUR', 'XLMEUR', 'XRPEUR'}
+pairs = {
+    "ADAEUR",
+    "BNBEUR",
+    "BTCEUR",
+    "BTTEUR",
+    "CAKEUSDT",
+    "CHZEUR",
+    "DOGEEUR",
+    "DOTEUR",
+    "EGLDEUR",
+    "EOSEUR",
+    "ETHEUR",
+    "FILUSDT",
+    "HNTUSDT",
+    "HOTUSDT",
+    "HOTEUR",
+    "SOLUSDT",
+    "SXPEUR",
+    "UNIEUR",
+    "XLMEUR",
+    "XRPEUR",
+}
+
+
+def toto() -> None:
+    s = 4
 
 
 # def get_my_assets() -> set:
@@ -45,10 +69,12 @@ pairs = {'ADAEUR', 'BNBEUR', 'BTCEUR', 'BTTEUR', 'CAKEUSDT', 'CHZEUR', 'DOGEEUR'
 #     print(f'nb_trades={nb_trades}')
 
 
-def main():
-    app = QApplication(sys.argv)
-    main_window = MainWindow()
-    sys.exit(app.exec())
+def main()->None:
+  app = QApplication(sys.argv)
+  main_window = MainWindow()
+  main_window.show()
+  sys.exit(app.exec())
+
 
 # trades = get_trades_from_csv_file('/home/patrick/Documents/Finances/Binance-export-trades1.csv')
 # pprint(trades)
@@ -56,5 +82,5 @@ def main():
 # pprint([trade for trade in trades if trade.pair == 'BTCEUR'])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
