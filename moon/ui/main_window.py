@@ -1,12 +1,24 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QCloseEvent, QIcon
-from PySide6.QtWidgets import QMainWindow, QFileDialog, QApplication, QMessageBox, QWidget, QTextEdit, QVBoxLayout, QGridLayout, QLabel
+from PySide6.QtGui import QAction, QCloseEvent, QIcon, QFont
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QFileDialog,
+    QApplication,
+    QMessageBox,
+    QWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QGridLayout,
+    QLabel,
+    QLayout,
+)
 from moon.model.trade import Trade
 from moon.model.wallet import Wallet
 from moon.model.assets_wallet import AssetWalletData
+
 # from moon.ui.trade_window import TradesWindow
 
-TRADES_CSF_FILE = "/home/patrick/Documents/Finances/Binance-export-trades.csv"
+TRADES_CSV_FILE = "/Users/Patrick/Documents locaux/Finances/Binance-export-trades.csv"
 
 
 class MainWindow(QMainWindow):
@@ -20,8 +32,8 @@ class MainWindow(QMainWindow):
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.layout = QGridLayout()
-        self.central_widget.setLayout(self.layout)
+        self.glayout = QGridLayout()
+        self.central_widget.setLayout(self.glayout)
 
         # self.init_menu_bar()
 
@@ -31,20 +43,29 @@ class MainWindow(QMainWindow):
         self.show()
 
         # asset dashboard init from csv
-        csv_trades = Trade.get_trades_from_csv_file(
-            "/home/patrick/Documents/Finances/Binance-export-trades.csv")
+        csv_trades = Trade.get_trades_from_csv_file(TRADES_CSV_FILE)
         assets_wallet, pnl, pnl_total = Wallet._import_trades(0, csv_trades)
 
-        for ind, (asset, data) in enumerate(assets_wallet.items()):
-          self.layout.addWidget(QLabel(asset), ind, 0)
-          self.layout.addWidget(QLabel(str(data.qty)), ind, 1)
-          self.layout.addWidget(QLabel(str(data.pru)), ind, 2)
-
-        # self.wallet_text = QTextEdit()
-        # self.layout.addWidget(self.wallet_text)
-        # for k, v in assets_wallet.items():
-        #     print(k, v)
-            # self.wallet_text = self.wallet_text + str(k) + str(v)
+        label_asset = QLabel("Asset")
+        label_qty = QLabel("Quantité")
+        label_pru = QLabel("PRU")
+        label_prt = QLabel("PRT")
+        font: QFont = label_asset.font()
+        font.setPointSize(15)
+        font.setBold(True)
+        label_asset.setFont(font)
+        label_qty.setFont(font)
+        label_pru.setFont(font)
+        label_prt.setFont(font)
+        self.glayout.addWidget(label_asset, 0, 0)
+        self.glayout.addWidget(label_qty, 0, 1)
+        self.glayout.addWidget(label_pru, 0, 2)
+        self.glayout.addWidget(label_prt, 0, 3)
+        for ind, (asset, data) in enumerate(assets_wallet.items(), 1):
+            self.glayout.addWidget(QLabel(asset), ind, 0)
+            self.glayout.addWidget(QLabel(str(round(data.qty, 3))), ind, 1)
+            self.glayout.addWidget(QLabel(str(round(data.pru, 3))), ind, 2)
+            self.glayout.addWidget(QLabel(str(round(data.pru * data.qty, 3))), ind, 3)
 
     def init_menu_bar(self) -> None:
         """
@@ -92,8 +113,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(
                 self,
                 "Import",
-                "Importation réussie.\n Le nombre de trades importés est %i." % (
-                    len(new_trades)),
+                "Importation réussie.\n Le nombre de trades importés est %i." % (len(new_trades)),
             )
             if new_trades:
                 wallet = Wallet.import_trades(new_trades)
