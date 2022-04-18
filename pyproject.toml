@@ -27,7 +27,7 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.mypy]
 disallow_untyped_defs = true
-disallow_any_unimported = true
+# disallow_any_unimported = true
 # ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true

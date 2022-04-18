@@ -143,7 +143,7 @@ def control_import_trades(assets_dict, pnl_list, pnl_total_list):
 def test_import_trades_from_csv_file_no_db():
     filename = os.path.join(os.getcwd(), 'tests/data/trades1.csv')
     csv_trades = Trade.get_trades_from_csv_file(filename)
-    assets_wallet, pnl, pnl_total = Wallet._import_trades(1,csv_trades)
+    assets_wallet, pnl, pnl_total = Wallet.import_trades(1, csv_trades)
     control_import_trades(assets_wallet, pnl, pnl_total)
 
 def test_import_trades_from_csv_file_with_db():

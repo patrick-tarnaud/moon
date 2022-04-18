@@ -40,11 +40,11 @@ class Wallet:
         self.pnl = pnl
         self.pnl_total = pnl_total
 
-    def __repr__(self) -> None:
+    def __repr__(self) -> str:
         return f"Wallet(id={self.id}, name='{self.name}', description='{self.description}', trades={self.trades!r}, assets_wallet={self.assets_wallet!r}, pnl={self.pnl!r}, pnl_total={self.pnl_total!r})"
 
     @staticmethod
-    def _import_trades(id_wallet: int, trades: list[Trade]) -> tuple[AssetsWallet, list[Pnl], list[PnlTotal]]:
+    def import_trades(id_wallet: int, trades: list[Trade]) -> tuple[AssetsWallet, list[Pnl], list[PnlTotal]]:
         logger.debug("Entry _import_trades")
         assets_wallet: AssetsWallet = AssetsWallet(id_wallet)
         pnl_list: list[Pnl] = []
@@ -129,7 +129,7 @@ class Wallet:
             sorted(pnl_total_list, key=lambda x: x.asset),
         )
 
-    def _merge_assets_wallet(self, assets_wallet: AssetsWallet):
+    def _merge_assets_wallet(self, assets_wallet: AssetsWallet) -> None:
         if self.assets_wallet is None:
             self.assets_wallet = assets_wallet
         else:
@@ -172,7 +172,7 @@ class Wallet:
     def import_trades_from_csv_file(self, filename: str):
         csv_trades = Trade.get_trades_from_csv_file(filename)
         new_trades = Trade.filter_new_trades(self.id, csv_trades)
-        assets_wallet, pnl, pnl_total = Wallet._import_trades(self.id, new_trades)
+        assets_wallet, pnl, pnl_total = Wallet.import_trades(self.id, new_trades)
         self._merge_assets_wallet(assets_wallet)
         self.assets_wallet.save()
         Pnl.save_all(self.id, pnl)
@@ -266,7 +266,7 @@ class Wallet:
     @staticmethod
     def compute_trades_csv_file_and_export(trades_csv_file: str, out_path: str) -> tuple[str, str, str]:
         csv_trades = Trade.get_trades_from_csv_file(trades_csv_file)
-        assets_wallet, pnl, pnl_total = Wallet._import_trades(0, csv_trades)
+        assets_wallet, pnl, pnl_total = Wallet.import_trades(0, csv_trades)
 
         with open(os.path.join(out_path, "assets_wallet.csv"), "w") as f:
             f.write("asset;qty;pru;investi\n")

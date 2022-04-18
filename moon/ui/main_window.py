@@ -11,10 +11,14 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QLabel,
     QLayout,
+    QPushButton,
 )
 from moon.model.trade import Trade
 from moon.model.wallet import Wallet
+import moon.common.mail as mail
+import moon.common.moon_config as moon_config
 from moon.model.assets_wallet import AssetWalletData
+import common.utils as utils
 
 # from moon.ui.trade_window import TradesWindow
 
@@ -44,7 +48,7 @@ class MainWindow(QMainWindow):
 
         # asset dashboard init from csv
         csv_trades = Trade.get_trades_from_csv_file(TRADES_CSV_FILE)
-        assets_wallet, pnl, pnl_total = Wallet._import_trades(0, csv_trades)
+        self.assets_wallet, pnl, pnl_total = Wallet.import_trades(0, csv_trades)
 
         label_asset = QLabel("Asset")
         label_qty = QLabel("Quantité")
@@ -61,11 +65,25 @@ class MainWindow(QMainWindow):
         self.glayout.addWidget(label_qty, 0, 1)
         self.glayout.addWidget(label_pru, 0, 2)
         self.glayout.addWidget(label_prt, 0, 3)
-        for ind, (asset, data) in enumerate(assets_wallet.items(), 1):
+        line = 1
+        for ind, (asset, data) in enumerate(self.assets_wallet.items(), 1):
             self.glayout.addWidget(QLabel(asset), ind, 0)
             self.glayout.addWidget(QLabel(str(round(data.qty, 3))), ind, 1)
-            self.glayout.addWidget(QLabel(str(round(data.pru, 3))), ind, 2)
-            self.glayout.addWidget(QLabel(str(round(data.pru * data.qty, 3))), ind, 3)
+            self.glayout.addWidget(QLabel(str(round(data.pru, 2)) + " " + data.currency), ind, 2)
+            self.glayout.addWidget(QLabel(str(round(data.pru * data.qty, 2)) + " " + data.currency), ind, 3)
+            line += 1
+        self.button_send_mail = QPushButton("Mail")
+        self.button_send_mail.clicked.connect(self.send_mail)  # type: ignore
+        self.glayout.addWidget(self.button_send_mail, line, 0)
+
+    def send_mail(self) -> None:
+        mail.send_mail(
+            moon_config.mail_from(),
+            moon_config.mail_to(),
+            "Moon!",
+            utils.convert_assets_wallet_to_html(self.assets_wallet),
+            mail.MailType.HTML,
+        )
 
     def init_menu_bar(self) -> None:
         """
