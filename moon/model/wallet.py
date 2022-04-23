@@ -1,15 +1,17 @@
 import logging.config
+import os
+import sys
 from datetime import datetime
 from decimal import *
 from typing import Optional
-import sys
-import os
+
 from moon.db.db import ConnectionDB
-from moon.exceptions.exceptions import EntityNotFoundError, Error, BusinessError
-from moon.model.assets_wallet import AssetWalletData, AssetsWallet
+from moon.exceptions.exceptions import BusinessError, EntityNotFoundError, Error
+
+from moon.model.assets_wallet import AssetsWallet, AssetWalletData
 from moon.model.pnl import Pnl
 from moon.model.pnl_total import PnlTotal
-from moon.model.trade import Trade, TradeType, TradeOrigin
+from moon.model.trade import Trade, TradeOrigin, TradeType
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -122,10 +124,12 @@ class Wallet:
             id_wallet,
             {asset: data for asset, data in assets_wallet.items() if data.qty != 0},
         )
+        
+        new_assets_wallet = dict(sorted(new_assets_wallet.items(), key= lambda item: item[1].qty*item[1].pru, reverse=True)) # type: ignore
 
         return (
             new_assets_wallet,
-            sorted(pnl_list, key=lambda x: x.date),
+            sorted(pnl_list, key=lambda x: x.date), # type: ignore
             sorted(pnl_total_list, key=lambda x: x.asset),
         )
 
@@ -169,7 +173,7 @@ class Wallet:
                 pnl_total_list_to_save.append(pnl_total)
         return pnl_total_list_to_save
 
-    def import_trades_from_csv_file(self, filename: str):
+    def import_trades_from_csv_file(self, filename: str) -> None:
         csv_trades = Trade.get_trades_from_csv_file(filename)
         new_trades = Trade.filter_new_trades(self.id, csv_trades)
         assets_wallet, pnl, pnl_total = Wallet.import_trades(self.id, new_trades)
@@ -182,7 +186,7 @@ class Wallet:
     def _is_creation(self) -> bool:
         return self.id is None
 
-    def validate(self):
+    def validate(self) -> None:
         errors = []
         if not self.name or type(self.name) is not str:
             errors.append(
@@ -259,7 +263,7 @@ class Wallet:
         self.pnl = Pnl.find(self.id, *list(locals().values())[1:])
         return self.pnl
 
-    def load_pnl_total(self, asset: Optional[str] = None):
+    def load_pnl_total(self, asset: Optional[str] = None) -> list[PnlTotal]:
         self.pnl_total = PnlTotal.find(self.id, *list(locals().values())[1:])
         return self.pnl_total
 

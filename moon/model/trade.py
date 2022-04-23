@@ -364,7 +364,7 @@ class Trade:
             csv_reader = csv.reader(csv_file, delimiter=';')
             for row in csv_reader:
                 trades.append(Trade(None, row[BINANCE_CSV_INDEX_PAIR],
-                                    TradeType(row[BINANCE_CSV_INDEX_TRADE_TYPE]),
+                                    TradeType.BUY if row[BINANCE_CSV_INDEX_TRADE_TYPE] == 'BUY' else TradeType.SELL,
                                     Decimal(row[BINANCE_CSV_INDEX_QTY]),
                                     Decimal(row[BINANCE_CSV_INDEX_PRICE]),
                                     Decimal(row[BINANCE_CSV_INDEX_TOTAl]),

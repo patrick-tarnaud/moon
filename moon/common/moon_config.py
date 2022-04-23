@@ -30,3 +30,11 @@ def mail_from() -> str:
 
 def mail_to() -> str:
     return str(conf['mail-to'])
+
+
+def api_key() -> str:
+    return str(conf['api-key'])
+
+
+def api_secret() -> str:
+    return str(conf['api-secret'])

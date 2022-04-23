@@ -9,6 +9,7 @@ python = "~3.9"
 PySide6 = "^6.1.2"
 Babel = "^2.9.1"
 dateutils = "^0.6.12"
+python-binance = "^1.0.16"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
@@ -24,16 +25,6 @@ log_cli = true
 log_cli_level = "DEBUG"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-
-[tool.mypy]
-disallow_untyped_defs = true
-# disallow_any_unimported = true
-# ignore_missing_imports = true
-no_implicit_optional = true
-check_untyped_defs = true
-warn_return_any = true
-show_error_codes = true
-warn_unused_ignores = true
 
 [tool.black]
 line-length = 120
